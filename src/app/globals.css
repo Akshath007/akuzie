@@ -25,10 +25,14 @@
 
 @layer base {
   * {
-    @apply border-gray-200;
+    border-color: #e5e7eb;
   }
+
   body {
-    @apply bg-white text-gray-900 antialiased;
+    background-color: #ffffff;
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -43,13 +47,16 @@
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #e5e7eb;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
