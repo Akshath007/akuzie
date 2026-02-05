@@ -11,7 +11,7 @@ const VARIANTS = {
 export default function StatCard({ label, value, subtext, icon: Icon, trend, variant = "violet" }) {
     return (
         <div className={cn(
-            "relative overflow-hidden p-6 rounded-2xl shadow-lg transition-transform hover:-translate-y-1 bg-gradient-to-br text-white",
+            "relative overflow-hidden p-6 rounded-3xl shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br text-white border border-white/10",
             VARIANTS[variant] || VARIANTS.violet
         )}>
             <div className="relative z-10">
