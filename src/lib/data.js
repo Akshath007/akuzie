@@ -107,6 +107,10 @@ export async function updateOrderStatus(id, status) {
     await updateDoc(docRef, { paymentStatus: status });
 }
 
+export async function deleteOrder(id) {
+    await deleteDoc(doc(db, "orders", id));
+}
+
 export async function getUserOrders(email) {
     const ordersCol = collection(db, "orders");
     const q = query(

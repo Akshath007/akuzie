@@ -60,7 +60,7 @@ export default function Navbar() {
         }
     };
 
-    return (
+    return pathname.startsWith('/akshath') ? null : (
         <>
             <nav
                 className={cn(

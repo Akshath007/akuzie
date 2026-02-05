@@ -6,6 +6,7 @@ import AddToCartButton from '@/components/AddToCartButton';
 import NotifyForm from '@/components/NotifyForm';
 import Accordion from '@/components/Accordion';
 import PaintingCard from '@/components/PaintingCard';
+import ImageGallery from '@/components/ImageGallery';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -49,28 +50,11 @@ export default async function PaintingPage({ params }) {
                 {/* Left: Image (Sticky) */}
                 <div className="lg:col-span-7 xl:col-span-8">
                     <div className="sticky top-32 space-y-4">
-                        <div className="relative aspect-[3/4] md:aspect-[4/5] bg-stone-50 w-full shadow-sm">
-                            {painting.images && painting.images[0] ? (
-                                <Image
-                                    src={painting.images[0]}
-                                    alt={painting.title}
-                                    fill
-                                    className="object-cover"
-                                    priority
-                                    sizes="(max-width: 768px) 100vw, 70vw"
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-stone-300 font-serif italic">No Preview</div>
-                            )}
-
-                            {isSold && (
-                                <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-                                    <span className="bg-stone-900 text-white px-8 py-4 text-xs font-bold uppercase tracking-[0.3em] shadow-xl">
-                                        Sold Out
-                                    </span>
-                                </div>
-                            )}
-                        </div>
+                        <ImageGallery
+                            images={painting.images}
+                            title={painting.title}
+                            isSold={isSold}
+                        />
                     </div>
                 </div>
 

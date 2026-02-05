@@ -3,7 +3,13 @@
 import { Instagram, Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
+import { usePathname } from 'next/navigation';
+
 export default function Footer() {
+    const pathname = usePathname();
+
+    if (pathname.startsWith('/akshath')) return null;
+
     return (
         <footer className="bg-white py-16 border-t border-gray-100 mt-20">
             <div className="max-w-7xl mx-auto px-6 flex flex-col items-center gap-8">
