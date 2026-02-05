@@ -13,7 +13,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchPaintings() {
       const data = await getPaintings();
-      setPaintings(data);
+      setPaintings(data.slice(0, 6)); // Limit to first 6 for home
       setLoading(false);
     }
     fetchPaintings();
@@ -63,9 +63,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: Featured Abstract Visual (Placeholder or decorative) */}
+          {/* Right: Featured Abstract Visual */}
           <div className="hidden md:block relative h-[80vh] w-full fade-in delay-300">
-            {/* This creates a gallery wall feel */}
             <div className="absolute top-10 right-10 w-64 h-80 bg-stone-200 rotate-3 shadow-2xl"></div>
             <div className="absolute top-20 right-32 w-64 h-80 bg-stone-300 -rotate-2 shadow-2xl z-20"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-96 bg-white border border-stone-100 shadow-xl z-30 flex items-center justify-center p-4">
@@ -91,19 +90,18 @@ export default function Home() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10">
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse space-y-4">
-                  <div className="aspect-[4/5] bg-stone-100"></div>
+                <div key={i} className="animate-pulse break-inside-avoid mb-8">
+                  <div className="aspect-[4/5] bg-stone-100 mb-2"></div>
                   <div className="h-4 bg-stone-100 w-2/3"></div>
-                  <div className="h-3 bg-stone-100 w-1/4"></div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-20 gap-x-10">
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
               {paintings.map((painting, idx) => (
-                <div key={painting.id} className="fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
+                <div key={painting.id} className="fade-in break-inside-avoid mb-8" style={{ animationDelay: `${idx * 100}ms` }}>
                   <PaintingCard painting={painting} />
                 </div>
               ))}

@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPainting, updatePainting } from '@/lib/data';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import Input from '@/components/Input';
 
 export default function EditPaintingPage({ params }) {
     const router = useRouter();
@@ -39,13 +41,8 @@ export default function EditPaintingPage({ params }) {
             } else if (url.includes('id=')) {
                 id = url.split('id=')[1].split('&')[0];
             }
-
-            if (id) {
-                return `https://lh3.googleusercontent.com/d/${id}`;
-            }
-        } catch (e) {
-            console.error('Error parsing GD URL', e);
-        }
+            if (id) return `https://lh3.googleusercontent.com/d/${id}`;
+        } catch (e) { console.error(e); }
         return url;
     };
 
@@ -54,7 +51,6 @@ export default function EditPaintingPage({ params }) {
         setSaving(true);
         try {
             let finalImageUrl = formData.images ? formData.images[0] : null;
-
             if (newImageUrl) {
                 finalImageUrl = getDirectLink(newImageUrl);
             }
@@ -64,7 +60,6 @@ export default function EditPaintingPage({ params }) {
                 price: Number(formData.price),
                 images: [finalImageUrl],
             });
-
             router.push('/admin/dashboard');
         } catch (error) {
             console.error(error);
@@ -78,90 +73,74 @@ export default function EditPaintingPage({ params }) {
     if (!formData) return null;
 
     return (
-        <div className="max-w-2xl mx-auto bg-white p-8 border border-gray-100 shadow-sm rounded-lg">
-            <h1 className="text-2xl font-light mb-8">Edit Painting</h1>
+        <div className="max-w-2xl mx-auto py-12 px-6">
+            <Link href="/admin/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 hover:text-gray-900 mb-8 transition-colors">
+                <ArrowLeft size={14} /> Back to Dashboard
+            </Link>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                    <label className="block text-sm text-gray-500 mb-1">Title</label>
-                    <input
+            <h1 className="text-3xl font-serif text-gray-900 mb-8">Edit Painting</h1>
+
+            <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-xl border border-stone-100 shadow-sm">
+
+                <Input
+                    label="Title"
+                    required
+                    value={formData.title}
+                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                />
+
+                <div className="grid grid-cols-2 gap-6">
+                    <Input
+                        label="Price (INR)"
+                        type="number"
                         required
-                        className="w-full p-3 border border-gray-200 rounded"
-                        value={formData.title}
-                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                        value={formData.price}
+                        onChange={e => setFormData({ ...formData, price: e.target.value })}
+                    />
+                    <Input
+                        label="Size"
+                        required
+                        value={formData.size}
+                        onChange={e => setFormData({ ...formData, size: e.target.value })}
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm text-gray-500 mb-1">Price (INR)</label>
-                        <input
-                            type="number"
-                            required
-                            className="w-full p-3 border border-gray-200 rounded"
-                            value={formData.price}
-                            onChange={e => setFormData({ ...formData, price: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-500 mb-1">Size</label>
-                        <input
-                            required
-                            className="w-full p-3 border border-gray-200 rounded"
-                            value={formData.size}
-                            onChange={e => setFormData({ ...formData, size: e.target.value })}
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm text-gray-500 mb-1">Medium</label>
-                        <input
-                            className="w-full p-3 border border-gray-200 rounded"
-                            value={formData.medium}
-                            onChange={e => setFormData({ ...formData, medium: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-500 mb-1">Finish</label>
-                        <input
-                            className="w-full p-3 border border-gray-200 rounded"
-                            value={formData.finish}
-                            onChange={e => setFormData({ ...formData, finish: e.target.value })}
-                        />
-                    </div>
+                <div className="grid grid-cols-2 gap-6">
+                    <Input
+                        label="Medium"
+                        value={formData.medium}
+                        onChange={e => setFormData({ ...formData, medium: e.target.value })}
+                    />
+                    <Input
+                        label="Finish"
+                        value={formData.finish}
+                        onChange={e => setFormData({ ...formData, finish: e.target.value })}
+                    />
                 </div>
 
                 <div>
-                    <label className="block text-sm text-gray-500 mb-1">Current Image</label>
+                    <label className="block text-xs uppercase tracking-widest text-gray-500 font-medium ml-1">Current Image</label>
                     {formData.images && formData.images[0] && (
-                        <div className="relative w-32 h-32 mb-4">
-                            <Image src={formData.images[0]} alt="Current" fill className="object-cover rounded" />
+                        <div className="relative w-32 h-32 mb-4 mt-2 border border-stone-200 rounded overflow-hidden">
+                            <Image src={formData.images[0]} alt="Current" fill className="object-cover" />
                         </div>
                     )}
 
-                    <label className="block text-sm text-gray-500 mb-1">New Image URL (Optional)</label>
-                    <div className="space-y-2">
-                        <input
-                            type="url"
-                            placeholder="https://drive.google.com/file/d/..."
-                            className="w-full p-3 border border-gray-200 rounded"
-                            value={newImageUrl}
-                            onChange={e => setNewImageUrl(e.target.value)}
-                        />
-                        <p className="text-xs text-gray-400">
-                            Paste a new Google Drive public link to replace the current image.
-                        </p>
-                    </div>
+                    <Input
+                        label="New Image URL (Optional)"
+                        type="url"
+                        placeholder="Paste new Google Drive link to replace..."
+                        value={newImageUrl}
+                        onChange={e => setNewImageUrl(e.target.value)}
+                    />
                 </div>
 
                 <button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-gray-900 text-white py-4 text-xs uppercase tracking-[0.2em] hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
                 >
-                    {saving && <Loader2 className="animate-spin" />}
+                    {saving && <Loader2 className="animate-spin" size={16} />}
                     Save Changes
                 </button>
             </form>

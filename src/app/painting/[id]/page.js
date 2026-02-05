@@ -1,9 +1,11 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getPainting } from '@/lib/data';
+import { getPainting, getPaintings } from '@/lib/data';
 import { formatPrice, PAINTING_STATUS } from '@/lib/utils';
 import AddToCartButton from '@/components/AddToCartButton';
 import NotifyForm from '@/components/NotifyForm';
+import Accordion from '@/components/Accordion';
+import PaintingCard from '@/components/PaintingCard';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,22 +28,28 @@ export default async function PaintingPage({ params }) {
         notFound();
     }
 
+    // Fetch "Related" (Just 3 random other paintings for now)
+    const allPaintings = await getPaintings();
+    const relatedPaintings = allPaintings
+        .filter(p => p.id !== painting.id && p.status === PAINTING_STATUS.AVAILABLE)
+        .slice(0, 3);
+
     const isSold = painting.status === PAINTING_STATUS.SOLD;
 
     return (
-        <div className="min-h-screen pt-24 pb-20 px-4 md:px-8 max-w-screen-2xl mx-auto">
+        <div className="min-h-screen pt-32 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto">
 
             {/* Back Link */}
-            <Link href="/" className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-gray-400 hover:text-gray-900 mb-12 transition-colors">
-                <ArrowLeft size={16} /> Back to Collection
+            <Link href="/gallery" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 hover:text-gray-900 mb-12 transition-colors">
+                <ArrowLeft size={14} /> Back to Archive
             </Link>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-24">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-24 mb-32">
 
-                {/* Left: Image (Stays sticky on desktop) */}
+                {/* Left: Image (Sticky) */}
                 <div className="lg:col-span-7 xl:col-span-8">
                     <div className="sticky top-32 space-y-4">
-                        <div className="relative aspect-[3/4] md:aspect-[4/5] bg-stone-50 w-full shadow-lg"> // shadow maybe?
+                        <div className="relative aspect-[3/4] md:aspect-[4/5] bg-stone-50 w-full shadow-sm">
                             {painting.images && painting.images[0] ? (
                                 <Image
                                     src={painting.images[0]}
@@ -52,7 +60,7 @@ export default async function PaintingPage({ params }) {
                                     sizes="(max-width: 768px) 100vw, 70vw"
                                 />
                             ) : (
-                                <div className="flex items-center justify-center h-full text-stone-300 font-serif italic">No Image</div>
+                                <div className="flex items-center justify-center h-full text-stone-300 font-serif italic">No Preview</div>
                             )}
 
                             {isSold && (
@@ -63,62 +71,30 @@ export default async function PaintingPage({ params }) {
                                 </div>
                             )}
                         </div>
-
-                        {/* Optional: Additional Shots Grid (if added later) */}
-                        {painting.images && painting.images.length > 1 && (
-                            <div className="grid grid-cols-4 gap-4">
-                                {painting.images.map((img, idx) => (
-                                    <div key={idx} className="relative aspect-square bg-stone-50 cursor-pointer hover:opacity-80 transition-opacity">
-                                        <Image src={img} alt="detail" fill className="object-cover" />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 </div>
 
                 {/* Right: Details */}
-                <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-center lg:py-12">
-                    <div className="space-y-8 fade-in delay-200">
+                <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-start lg:py-12 fade-in delay-200">
 
-                        <div className="space-y-2 border-b border-gray-100 pb-8">
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-gray-900 leading-tight">
-                                {painting.title}
-                            </h1>
-                            <div className="flex items-baseline gap-4 pt-2">
-                                <p className="text-2xl font-sans font-light text-gray-600">
-                                    {formatPrice(painting.price)}
-                                </p>
-                                <span className="text-xs uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">
-                                    {isSold ? 'Unavailable' : 'In Stock'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6 text-sm md:text-base font-light text-gray-600 leading-relaxed">
-                            <p>
-                                {painting.description || "Top notes of calm blue meet chaotic strokes of acrylic. This piece is part of the 'Silence' collection, exploring the gap between thought and expression."}
+                    <div className="border-b border-stone-200 pb-8 mb-8">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-gray-900 leading-tight mb-4">
+                            {painting.title}
+                        </h1>
+                        <div className="flex items-center justify-between">
+                            <p className="text-2xl font-light text-gray-900 font-sans">
+                                {formatPrice(painting.price)}
                             </p>
-
-                            <div className="grid grid-cols-2 gap-y-4 gap-x-8 py-6">
-                                <div>
-                                    <span className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Medium</span>
-                                    <span className="font-serif text-lg text-gray-900">{painting.medium || 'Acrylic on Canvas'}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Dimensions</span>
-                                    <span className="font-serif text-lg text-gray-900">{painting.size}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Finish</span>
-                                    <span className="font-serif text-lg text-gray-900">{painting.finish || 'Matte Varnish'}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Authenticity</span>
-                                    <span className="font-serif text-lg text-gray-900">Signed Original</span>
-                                </div>
-                            </div>
+                            <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                                {painting.size || 'Original'}
+                            </span>
                         </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <p className="text-stone-600 font-light leading-relaxed">
+                            {painting.description || "An original exploration of color and form. This piece is signed by the artist and comes ready to hang."}
+                        </p>
 
                         <div className="pt-4">
                             {isSold ? (
@@ -128,18 +104,40 @@ export default async function PaintingPage({ params }) {
                             )}
                         </div>
 
-                        <div className="bg-stone-50 p-6 mt-8 space-y-4">
-                            <h4 className="font-serif text-lg text-gray-900">Shipping & Returns</h4>
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                                Ships within 5-7 business days in a reinforced tube or box depending on size.
-                                Includes a certificate of authenticity.
-                                Returns accepted within 7 days of delivery if damaged.
-                            </p>
+                        {/* Accordions */}
+                        <div className="pt-8">
+                            <Accordion title="Details" defaultOpen={true}>
+                                <ul className="space-y-2 list-none">
+                                    <li><span className="text-stone-400 mr-2">Medium:</span> {painting.medium || 'Acrylic on Canvas'}</li>
+                                    <li><span className="text-stone-400 mr-2">Size:</span> {painting.size}</li>
+                                    <li><span className="text-stone-400 mr-2">Finish:</span> {painting.finish || 'Matte Varnish'}</li>
+                                    <li><span className="text-stone-400 mr-2">Authenticity:</span> Hand-signed on front/back</li>
+                                </ul>
+                            </Accordion>
+                            <Accordion title="Shipping & Returns">
+                                <p className="mb-2"><strong>Global Shipping:</strong> We ship worldwide using specialized art couriers. Allow 5–7 business days for preparation.</p>
+                                <p><strong>Returns:</strong> Accepted within 7 days of delivery only if the artwork arrives damaged. Please document packaging upon arrival.</p>
+                            </Accordion>
+                            <Accordion title="Care Guide">
+                                <p>Keep out of direct sunlight to preserve color vibrancy. Dust gently with a dry microfiber cloth. Do not use water or cleaning solutions.</p>
+                            </Accordion>
                         </div>
                     </div>
                 </div>
-
             </div>
+
+            {/* Related Works */}
+            {relatedPaintings.length > 0 && (
+                <div className="border-t border-stone-100 pt-24">
+                    <h2 className="text-3xl font-serif text-gray-900 mb-12">You May Also Like</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        {relatedPaintings.map(p => (
+                            <PaintingCard key={p.id} painting={p} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
