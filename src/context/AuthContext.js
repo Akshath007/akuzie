@@ -27,25 +27,30 @@ export function AuthProvider({ children }) {
             const user = result.user;
 
             // Check if user exists in Firestore, if not create new
-            const { doc, getDoc, setDoc, serverTimestamp } = await import('firebase/firestore');
-            const { db } = await import('@/lib/firebase');
+            try {
+                const { doc, getDoc, setDoc, serverTimestamp } = await import('firebase/firestore');
+                const { db } = await import('@/lib/firebase');
 
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
 
-            if (!userSnap.exists()) {
-                await setDoc(userRef, {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                    createdAt: serverTimestamp(),
-                    lastLoginAt: serverTimestamp(),
-                });
-            } else {
-                await setDoc(userRef, {
-                    lastLoginAt: serverTimestamp()
-                }, { merge: true });
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL,
+                        createdAt: serverTimestamp(),
+                        lastLoginAt: serverTimestamp(),
+                    });
+                } else {
+                    await setDoc(userRef, {
+                        lastLoginAt: serverTimestamp()
+                    }, { merge: true });
+                }
+            } catch (dbError) {
+                console.error("Error saving user to Firestore (Login proceeded anyway):", dbError);
+                // We do NOT throw here, allowing the user to still log in even if DB fails
             }
 
         } catch (error) {

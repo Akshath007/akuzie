@@ -165,14 +165,30 @@ export default function Navbar() {
                             </Link>
                         </div>
 
-                        {/* Mobile Right: Cart */}
-                        <div className="md:hidden flex items-center z-50">
+                        {/* Mobile Right: Cart & Profile */}
+                        <div className="md:hidden flex items-center gap-4 z-50">
                             <Link href="/cart" className="relative text-gray-900">
                                 <ShoppingBag size={20} strokeWidth={1.5} />
                                 {cart.length > 0 && (
                                     <span className="absolute -top-1 -right-1 h-2 w-2 bg-stone-800 rounded-full"></span>
                                 )}
                             </Link>
+
+                            {user ? (
+                                <Link href="/profile" className="w-6 h-6 rounded-full overflow-hidden border border-stone-200">
+                                    {user.photoURL ? (
+                                        <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-500">
+                                            <User size={14} />
+                                        </div>
+                                    )}
+                                </Link>
+                            ) : (
+                                <Link href="/login" className="text-gray-900">
+                                    <User size={20} strokeWidth={1.5} />
+                                </Link>
+                            )}
                         </div>
 
                     </div>
@@ -207,7 +223,6 @@ export default function Navbar() {
                     <Link href="/" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Home</Link>
                     <Link href="/gallery" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Archive</Link>
                     <Link href="/cart" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Cart ({cart.length})</Link>
-                    <Link href="/about" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>The Artist</Link>
 
                     {user ? (
                         <Link href="/profile" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors flex items-center gap-3" onClick={() => setIsOpen(false)}>
