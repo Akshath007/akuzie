@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --font-serif: var(--font-cormorant), serif;
-  --font-sans: var(--font-outfit), sans-serif;
+  --font-serif: var(--font-playfair), serif;
+  --font-sans: var(--font-inter), sans-serif;
 }
 
 @layer base {
   body {
-    background-color: #ffffff;
-    color: #1c1917;
-    /* warm gray 900 */
+    background-color: #fafafa;
+    color: #171717;
+    /* neutral 900 */
     font-family: var(--font-sans);
+    letter-spacing: -0.01em;
   }
 
   h1,
@@ -22,6 +23,7 @@
   h5,
   h6 {
     font-family: var(--font-serif);
+    letter-spacing: -0.02em;
   }
 }
 

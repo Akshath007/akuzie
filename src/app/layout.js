@@ -1,19 +1,18 @@
-import { Outfit, Cormorant_Garamond } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Providers } from "@/components/Providers";
 
-const outfit = Outfit({
+const inter = Inter({
   subsets: ["latin"],
-  variable: '--font-outfit',
+  variable: '--font-inter',
   display: 'swap',
 });
 
-const cormorant = Cormorant_Garamond({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: '--font-cormorant',
+  variable: '--font-playfair',
   display: 'swap',
 });
 
@@ -24,8 +23,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${cormorant.variable}`}>
-      <body className="bg-white min-h-screen flex flex-col font-sans selection:bg-gray-900 selection:text-white">
+    <html lang="en" className={`${inter.variable} ${playfair.variable} scroll-smooth`}>
+      <body className="bg-[#fafafa] min-h-screen flex flex-col font-sans selection:bg-stone-900 selection:text-white antialiased">
         <Providers>
           <Navbar />
           <main className="flex-grow">

@@ -56,7 +56,7 @@ export default function Navbar() {
                     (scrolled || isOpen) ? "bg-white/95 backdrop-blur-md border-stone-100 py-3 shadow-sm" : "bg-transparent py-6"
                 )}
             >
-                <div className="max-w-[1600px] mx-auto px-6">
+                <div className="max-w-7xl mx-auto px-6 lg:px-12">
                     <div className="flex justify-between items-center h-12">
 
                         {/* Left: Mobile Toggle & Search Trigger */}

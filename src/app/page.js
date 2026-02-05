@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowDown, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { getPaintings } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
+import Image from 'next/image';
 
 export default function Home() {
   const [paintings, setPaintings] = useState([]);
@@ -20,116 +21,126 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-stone-50/30">
+    <div className="flex flex-col min-h-screen">
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 pt-20">
+      {/* 
+        HERO SECTION 
+        - Mobile: Image top, Text bottom (stacked)
+        - Desktop: Text left, Image right (2 columns)
+        - Full height on desktop
+      */}
+      <section className="relative w-full pt-16 md:pt-0 md:h-screen flex items-center bg-[#fafafa]">
+        <div className="max-w-7xl mx-auto w-full px-6 lg:px-12 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center h-full">
 
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-          <div className="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-stone-100 blur-3xl opacity-60"></div>
-          <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-stone-200 blur-3xl opacity-40"></div>
-        </div>
-
-        <div className="max-w-screen-xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-
-          {/* Left: Text */}
-          <div className="space-y-10 z-10 fade-in delay-100">
+          {/* Left Content (Text) */}
+          <div className="order-2 md:order-1 flex flex-col justify-center space-y-8 md:space-y-12 pb-12 md:pb-0 fade-in delay-100">
             <div>
-              <h2 className="text-xs md:text-sm font-sans uppercase tracking-[0.3em] text-stone-500 mb-6">
-                Original Artwork
+              <h2 className="text-xs font-sans uppercase tracking-[0.25em] text-gray-500 mb-6 font-medium">
+                Handmade Collection
               </h2>
-              <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-gray-900 leading-[0.9]">
-                Pure <br /> <span className="italic text-stone-400">Chaos</span> & <br /> Calm.
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-gray-900 leading-[1.1] mb-6">
+                Silence in <br />
+                <span className="italic text-gray-400">Chaos.</span>
               </h1>
+              <p className="text-lg md:text-xl text-gray-600 font-light max-w-md leading-relaxed">
+                Original acrylic paintings on canvas. <br className="hidden md:block" />
+                A curated exploration of texture, form, and emotion.
+              </p>
             </div>
 
-            <p className="text-lg md:text-xl text-gray-600 font-light max-w-md leading-relaxed">
-              Handmade acrylic paintings on canvas by Akshath.
-              Each piece is a unique narrative of color and texture.
-            </p>
-
-            <div className="flex items-center gap-6 pt-4">
+            <div className="flex items-center gap-8">
               <Link
-                href="#gallery"
-                className="group relative px-8 py-4 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] overflow-hidden"
+                href="/gallery"
+                className="group relative inline-flex items-center justify-center px-10 py-5 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] overflow-hidden transition-all hover:bg-gray-800"
               >
-                <span className="relative z-10 group-hover:text-stone-200 transition-colors">Start Collecting</span>
-                <div className="absolute inset-0 bg-stone-800 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500 ease-out"></div>
+                <span className="relative z-10 transition-colors">View Gallery</span>
               </Link>
-              <Link href="/gallery" className="text-xs uppercase tracking-[0.2em] underline underline-offset-4 decoration-stone-300 hover:text-stone-500 transition-colors">
-                View Archive
+              <Link href="/about" className="text-xs uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900 transition-colors">
+                The Artist
               </Link>
             </div>
           </div>
 
-          {/* Right: Featured Abstract Visual */}
-          <div className="hidden md:block relative h-[80vh] w-full fade-in delay-300">
-            <div className="absolute top-10 right-10 w-64 h-80 bg-stone-200 rotate-3 shadow-2xl"></div>
-            <div className="absolute top-20 right-32 w-64 h-80 bg-stone-300 -rotate-2 shadow-2xl z-20"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-96 bg-white border border-stone-100 shadow-xl z-30 flex items-center justify-center p-4">
-              <div className="w-full h-full bg-stone-50 flex items-center justify-center">
-                <span className="font-serif italic text-stone-400 text-2xl">Akuzie</span>
+          {/* Right Content (Image) */}
+          <div className="order-1 md:order-2 h-[50vh] md:h-full w-full relative bg-gray-100 overflow-hidden fade-in delay-200">
+            {/* 
+                  Using a placeholder or featured image. 
+                  In a real scenario, this would be a specific featured painting URL. 
+               */}
+            <div className="absolute inset-0 md:inset-x-0 md:top-[15%] md:bottom-[15%] md:left-[10%] bg-white shadow-2xl p-4 md:p-6 rotate-1 hover:rotate-0 transition-transform duration-700 ease-out">
+              <div className="w-full h-full relative bg-stone-200 overflow-hidden">
+                {paintings.length > 0 && paintings[0].images && (
+                  <Image
+                    src={paintings[0].images[0]}
+                    alt="Featured Artwork"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                )}
+                {!paintings.length && <div className="w-full h-full bg-stone-200"></div>}
               </div>
             </div>
           </div>
+
         </div>
       </section>
 
-      {/* Gallery Section */}
-      <section id="gallery" className="py-24 md:py-32 px-6">
+      {/* 
+        GALLERY PREVIEW SECTION 
+        - Strict Grid: 1 col (mobile), 2 col (tablet), 3 col (desktop)
+        - Clean spacing
+      */}
+      <section id="gallery" className="py-20 md:py-32 px-6 lg:px-12 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-serif text-gray-900 mb-4">Latest Additions</h2>
-              <p className="text-stone-500 font-light max-w-sm">Curated selection of recent works available for acquisition.</p>
+            <div className="max-w-xl">
+              <h2 className="text-3xl md:text-5xl font-serif text-gray-900 mb-6 leading-tight">Latest Acquisitions.</h2>
+              <p className="text-gray-500 font-light text-lg">Selected works currently available for purchase.</p>
             </div>
-            <Link href="/gallery" className="hidden md:flex items-center gap-2 text-xs uppercase tracking-widest hover:gap-4 transition-all duration-300">
-              View All Works <ArrowRight size={14} />
+            <Link href="/gallery" className="hidden md:flex items-center gap-3 text-xs uppercase tracking-widest text-gray-900 hover:text-gray-600 transition-all group">
+              View All <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           {loading ? (
-            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse break-inside-avoid mb-8">
-                  <div className="aspect-[4/5] bg-stone-100 mb-2"></div>
-                  <div className="h-4 bg-stone-100 w-2/3"></div>
+                <div key={i} className="space-y-4">
+                  <div className="aspect-[4/5] bg-gray-100 animate-pulse"></div>
+                  <div className="h-4 bg-gray-100 w-2/3 animate-pulse"></div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-8 md:gap-x-12">
               {paintings.map((painting, idx) => (
-                <div key={painting.id} className="fade-in break-inside-avoid mb-8" style={{ animationDelay: `${idx * 100}ms` }}>
+                <div key={painting.id} className="fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
                   <PaintingCard painting={painting} />
                 </div>
               ))}
             </div>
           )}
 
-          {!loading && paintings.length === 0 && (
-            <div className="py-24 text-center border-t border-stone-100 mt-12">
-              <h3 className="font-serif text-2xl text-stone-400 italic">Collection updating soon.</h3>
-            </div>
-          )}
-
           <div className="mt-20 text-center md:hidden">
-            <Link href="/gallery" className="inline-block border border-gray-900 px-8 py-3 text-xs uppercase tracking-widest">
-              View All
+            <Link href="/gallery" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest">
+              View All Works
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Philosophy / About Strip */}
-      <section className="py-24 bg-stone-900 text-stone-300 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <span className="text-xs uppercase tracking-[0.3em] text-stone-500">The Philosophy</span>
-          <p className="text-2xl md:text-4xl font-serif leading-relaxed text-white">
-            "Art is not just about what you see, but what you feel. <br className="hidden md:block" />
-            Akuzie represents the silence in chaos."
+      {/* 
+        PHILOSOPHY STRIP 
+        - Minimal, centered text 
+      */}
+      <section className="py-24 md:py-40 bg-[#fafafa] px-6">
+        <div className="max-w-3xl mx-auto text-center space-y-8">
+          <div className="w-px h-16 bg-gray-300 mx-auto mb-8"></div>
+          <p className="text-2xl md:text-4xl font-serif leading-relaxed text-gray-900">
+            "We don't make mistakes, just happy little accidents."
           </p>
+          <p className="text-sm font-sans uppercase tracking-widest text-gray-500">— Bob Ross & Akshath</p>
         </div>
       </section>
 
