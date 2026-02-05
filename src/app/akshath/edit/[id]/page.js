@@ -60,7 +60,7 @@ export default function EditPaintingPage({ params }) {
                 price: Number(formData.price),
                 images: [finalImageUrl],
             });
-            router.push('/admin/dashboard');
+            router.push('/akshath/dashboard');
         } catch (error) {
             console.error(error);
             alert("Error updating painting");
