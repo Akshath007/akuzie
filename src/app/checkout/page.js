@@ -63,20 +63,30 @@ export default function CheckoutPage() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto px-4 py-12">
-            <div className="mb-12">
-                <div className="flex items-center justify-between text-sm uppercase tracking-widest text-gray-400 mb-4">
-                    <span className={step === 1 ? "text-gray-900" : ""}>1. Details</span>
-                    <span className={step === 2 ? "text-gray-900" : ""}>2. Payment</span>
-                    <span>3. Confirmation</span>
+        <div className="max-w-3xl mx-auto px-6 pt-32 pb-20">
+            <div className="mb-16">
+                <div className="flex items-center justify-between text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] text-gray-400 mb-6">
+                    <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
+                        <span className={step === 1 ? "text-gray-900 font-bold" : ""}>01.</span>
+                        <span className={step === 1 ? "text-gray-900 font-bold" : ""}>Details</span>
+                    </div>
+                    <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
+                        <span className={step === 2 ? "text-gray-900 font-bold" : ""}>02.</span>
+                        <span className={step === 2 ? "text-gray-900 font-bold" : ""}>Payment</span>
+                    </div>
+                    <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
+                        <span>03.</span>
+                        <span>Confirmation</span>
+                    </div>
                 </div>
-                <div className="h-px bg-gray-100 relative">
+                <div className="h-[2px] bg-gray-100 relative">
                     <div
-                        className="absolute left-0 top-0 h-full bg-gray-900 transition-all duration-300"
-                        style={{ width: step === 1 ? '33%' : '66%' }}
+                        className="absolute left-0 top-0 h-full bg-gray-900 transition-all duration-500 ease-out"
+                        style={{ width: step === 1 ? '33.33%' : step === 2 ? '66.66%' : '100%' }}
                     ></div>
                 </div>
             </div>
+
 
             {step === 1 && (
                 <form onSubmit={handleDetailsSubmit} className="space-y-6 fade-in">

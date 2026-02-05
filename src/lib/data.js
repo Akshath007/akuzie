@@ -7,14 +7,26 @@ export async function getPaintings() {
     const paintingsCol = collection(db, "paintings");
     const q = query(paintingsCol, orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toMillis() || null,
+        };
+    });
 }
 
 export async function getPainting(id) {
     const docRef = doc(db, "paintings", id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() };
+        const data = docSnap.data();
+        return {
+            id: docSnap.id,
+            ...data,
+            createdAt: data.createdAt?.toMillis() || null,
+        };
     }
     return null;
 }
@@ -54,7 +66,14 @@ export async function getOrders() {
     const ordersCol = collection(db, "orders");
     const q = query(ordersCol, orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toMillis() || null,
+        };
+    });
 }
 
 export async function addNotifyRequest(data) {

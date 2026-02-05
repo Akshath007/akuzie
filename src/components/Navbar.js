@@ -172,19 +172,31 @@ export default function Navbar() {
                     </div>
                 )}
 
-                {/* Mobile Menu View */}
-                <div
-                    className={cn(
-                        "fixed inset-0 bg-white z-40 flex flex-col justify-start items-center pt-32 gap-12 transition-all duration-500 ease-in-out md:hidden",
-                        isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
-                    )}
-                >
-                    <Link href="/" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">Home</Link>
-                    <Link href="/gallery" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">Archive</Link>
-                    <Link href="/cart" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">Cart ({cart.length})</Link>
-                    <Link href="/about" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">The Artist</Link>
-                </div>
             </nav>
+
+            {/* Mobile Menu View */}
+            <div
+                className={cn(
+                    "fixed inset-0 bg-white z-[60] flex flex-col justify-start items-center pt-32 gap-10 transition-all duration-500 ease-in-out md:hidden",
+                    isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+                )}
+            >
+                <div className="flex flex-col items-center gap-8">
+                    <Link href="/" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Home</Link>
+                    <Link href="/gallery" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Archive</Link>
+                    <Link href="/cart" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Cart ({cart.length})</Link>
+                    <Link href="/about" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>The Artist</Link>
+                </div>
+
+
+                <button
+                    onClick={() => setIsOpen(false)}
+                    className="mt-12 p-4 rounded-full bg-stone-100 text-gray-900 hover:bg-stone-200 transition-colors"
+                >
+                    <X size={24} strokeWidth={1} />
+                </button>
+            </div>
+
         </>
     );
 }
