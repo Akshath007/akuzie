@@ -4,86 +4,100 @@ import Link from 'next/link';
 import { ShoppingBag, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const pathname = usePathname();
+    const { cart } = useCart();
 
-    // Close mobile menu on route change
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     useEffect(() => {
         setIsOpen(false);
     }, [pathname]);
 
-    const navLinks = [
-        { href: '/', label: 'Home' },
-        { href: '/gallery', label: 'Gallery' },
-    ];
-
     return (
-        <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
+        <nav
+            className={cn(
+                "fixed top-0 z-50 w-full transition-all duration-300 border-b border-transparent",
+                (scrolled || isOpen) ? "bg-white/90 backdrop-blur-md border-stone-100 py-2 shadow-sm" : "bg-transparent py-6"
+            )}
+        >
+            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                <div className="flex justify-between items-center h-12">
+
                     {/* Logo */}
-                    <div className="flex-shrink-0 flex items-center">
-                        <Link href="/" className="text-2xl font-light tracking-widest uppercase">
-                            Akuzie
-                        </Link>
-                    </div>
+                    <Link href="/" className="font-serif text-3xl text-gray-900 tracking-wide z-50">
+                        Akuzie
+                    </Link>
 
                     {/* Desktop Nav */}
-                    <div className="hidden md:flex space-x-8 items-center">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    "text-sm uppercase tracking-wide transition-colors hover:text-gray-900",
-                                    pathname === link.href ? "text-gray-900 font-medium" : "text-gray-500"
+                    <div className="hidden md:flex items-center gap-12">
+                        <Link
+                            href="/"
+                            className="text-xs uppercase tracking-[0.2em] font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                        >
+                            Collection
+                        </Link>
+                        <Link
+                            href="/gallery"
+                            className="text-xs uppercase tracking-[0.2em] font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                        >
+                            Gallery
+                        </Link>
+
+                        <Link href="/cart" className="group relative flex items-center gap-2 text-gray-900">
+                            <span className="text-xs uppercase tracking-[0.2em] font-medium group-hover:text-gray-600 transition-colors">Cart</span>
+                            <div className="relative">
+                                <ShoppingBag size={18} strokeWidth={1.5} />
+                                {cart.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stone-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-stone-800"></span>
+                                    </span>
                                 )}
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                        <Link href="/cart" className="relative p-2 text-gray-500 hover:text-gray-900 transition-colors">
-                            <ShoppingBag size={20} />
+                            </div>
                         </Link>
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    <div className="md:hidden flex items-center">
-                        <Link href="/cart" className="p-2 mr-2 text-gray-500 hover:text-gray-900">
-                            <ShoppingBag size={20} />
+                    {/* Mobile Menu Toggle */}
+                    <div className="md:hidden flex items-center gap-6 z-50">
+                        <Link href="/cart" className="relative text-gray-900">
+                            <ShoppingBag size={20} strokeWidth={1.5} />
+                            {cart.length > 0 && (
+                                <span className="absolute -top-1 -right-1 h-2 w-2 bg-stone-800 rounded-full"></span>
+                            )}
                         </Link>
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="p-2 text-gray-500 hover:text-gray-900 focus:outline-none"
+                            className="text-gray-900 focus:outline-none"
                         >
-                            {isOpen ? <X size={24} /> : <Menu size={24} />}
+                            {isOpen ? <X size={24} strokeWidth={1} /> : <Menu size={24} strokeWidth={1} />}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Menu */}
-            {isOpen && (
-                <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-5">
-                    <div className="px-4 pt-2 pb-6 space-y-1">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    "block px-3 py-2 text-base font-medium uppercase tracking-wide",
-                                    pathname === link.href ? "text-gray-900 bg-gray-50" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                                )}
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            )}
+            {/* Mobile Menu View */}
+            <div
+                className={cn(
+                    "fixed inset-0 bg-white z-40 flex flex-col justify-center items-center gap-8 transition-transform duration-500 ease-in-out md:hidden",
+                    isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+                )}
+            >
+                <Link href="/" className="font-serif text-4xl text-gray-900">Home</Link>
+                <Link href="/gallery" className="font-serif text-4xl text-gray-900">Gallery</Link>
+                <Link href="/cart" className="font-serif text-4xl text-gray-900">Cart ({cart.length})</Link>
+            </div>
         </nav>
     );
 }
