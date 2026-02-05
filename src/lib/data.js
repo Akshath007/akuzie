@@ -106,3 +106,21 @@ export async function updateOrderStatus(id, status) {
     const docRef = doc(db, "orders", id);
     await updateDoc(docRef, { paymentStatus: status });
 }
+
+export async function getUserOrders(email) {
+    const ordersCol = collection(db, "orders");
+    const q = query(
+        ordersCol,
+        where("customerEmail", "==", email),
+        orderBy("createdAt", "desc")
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toMillis() || null,
+        };
+    });
+}

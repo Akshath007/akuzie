@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Menu, X, Search } from 'lucide-react';
+import { ShoppingBag, Menu, X, Search, User } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import Input from './Input';
 
@@ -17,6 +18,7 @@ export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { cart } = useCart();
+    const { user, loading } = useAuth();
     const searchInputRef = useRef(null);
 
     useEffect(() => {
@@ -106,7 +108,6 @@ export default function Navbar() {
                             </Link>
                         </div>
 
-                        {/* Desktop Right: Search & Cart */}
                         <div className="hidden md:flex items-center gap-8">
                             <div className={cn("transition-all duration-300 overflow-hidden", showSearch ? "w-64 opacity-100" : "w-0 opacity-0")}>
                                 <form onSubmit={handleSearchSubmit}>
@@ -128,6 +129,27 @@ export default function Navbar() {
                             >
                                 <Search size={20} strokeWidth={1.5} />
                             </button>
+
+                            {/* User Profile / Login */}
+                            <div className="relative">
+                                {loading ? (
+                                    <div className="w-5 h-5 bg-stone-100 rounded-full animate-pulse" />
+                                ) : user ? (
+                                    <Link href="/profile" className="block w-8 h-8 rounded-full overflow-hidden border border-stone-200 hover:border-stone-900 transition-colors">
+                                        {user.photoURL ? (
+                                            <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-500">
+                                                <User size={16} />
+                                            </div>
+                                        )}
+                                    </Link>
+                                ) : (
+                                    <Link href="/login" className="text-gray-900 hover:text-gray-600 transition-colors">
+                                        <User size={20} strokeWidth={1.5} />
+                                    </Link>
+                                )}
+                            </div>
 
                             <Link href="/cart" className="group relative flex items-center gap-2 text-gray-900">
                                 <span className="text-xs uppercase tracking-[0.2em] font-medium group-hover:text-gray-600 transition-colors">Cart</span>
@@ -186,6 +208,18 @@ export default function Navbar() {
                     <Link href="/gallery" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Archive</Link>
                     <Link href="/cart" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Cart ({cart.length})</Link>
                     <Link href="/about" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>The Artist</Link>
+
+                    {user ? (
+                        <Link href="/profile" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors flex items-center gap-3" onClick={() => setIsOpen(false)}>
+                            {user.photoURL && (
+                                <img src={user.photoURL} alt={user.displayName} className="w-8 h-8 rounded-full border border-stone-200" />
+                            )}
+                            Profile
+                        </Link>
+                    ) : (
+                        <Link href="/login" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Login</Link>
+                    )}
+
                 </div>
 
 
