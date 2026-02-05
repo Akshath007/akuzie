@@ -40,6 +40,7 @@ export default function CheckoutPage() {
     const handlePaymentComplete = async () => {
         setLoading(true);
         try {
+            // Create order data to pass to Lemon Squeezy
             const orderData = {
                 customerName: formData.name,
                 phone: formData.phone,
@@ -50,17 +51,43 @@ export default function CheckoutPage() {
 
             const paintingIds = cart.map(item => item.id);
 
+            // First, create the order in Firebase
             const orderId = await processOrder(orderData, paintingIds);
 
-            clearCart();
-            router.push(`/order-confirmation?orderId=${orderId}`);
+            // Create Lemon Squeezy checkout session
+            // Note: You'll need to create a product/variant in Lemon Squeezy dashboard
+            // and use the variant ID here
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID || '1', // Replace with your variant ID
+                    productName: `Akuzie Paintings - Order #${orderId.substring(0, 8)}`,
+                    customData: {
+                        orderId,
+                        customerEmail: formData.email || '',
+                        items: cart.map(item => item.title).join(', '),
+                    },
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create checkout session');
+            }
+
+            // Redirect to Lemon Squeezy checkout
+            window.location.href = data.checkoutUrl;
         } catch (error) {
-            console.error("Order failed", error);
-            alert("Something went wrong. Please try again.");
-        } finally {
+            console.error("Payment initiation failed", error);
+            alert(`Payment failed: ${error.message}. Please try again.`);
             setLoading(false);
         }
     };
+
 
     return (
         <div className="max-w-3xl mx-auto px-6 pt-32 pb-20">
@@ -160,24 +187,34 @@ export default function CheckoutPage() {
                 <div className="space-y-8 fade-in">
                     <h2 className="text-2xl font-light text-gray-900">Payment</h2>
 
-                    <div className="bg-gray-50 p-8 text-center border border-gray-100">
-                        <p className="text-sm text-gray-500 mb-6 uppercase tracking-wide">Scan to Pay</p>
-                        <div className="w-48 h-48 bg-white mx-auto mb-6 flex items-center justify-center border border-gray-200">
-                            {/* Placeholder for QR Code */}
-                            <span className="text-xs text-gray-400">QR Code Here</span>
+                    <div className="bg-gray-50 p-8 border border-gray-100 rounded-lg">
+                        <div className="text-center mb-8">
+                            <p className="text-sm text-gray-500 mb-4 uppercase tracking-wide">Order Summary</p>
+                            <p className="text-3xl font-serif text-gray-900 mb-2">{formatPrice(total)}</p>
+                            <p className="text-sm text-gray-500">
+                                {cart.length} {cart.length === 1 ? 'painting' : 'paintings'}
+                            </p>
                         </div>
-                        <p className="text-lg font-medium text-gray-900 mb-2">{formatPrice(total)}</p>
-                        <p className="text-sm text-gray-500 mb-6">UPI ID: akuzie@upi</p>
 
-                        <div className="text-xs text-gray-400 max-w-sm mx-auto">
-                            Please complete the payment using any UPI app. Once the transaction is successful, click the button below.
+                        <div className="space-y-3 mb-8">
+                            {cart.map((item) => (
+                                <div key={item.id} className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-700">{item.title}</span>
+                                    <span className="text-gray-900 font-medium">{formatPrice(item.price)}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="text-xs text-gray-500 text-center max-w-md mx-auto">
+                            You will be redirected to our secure payment partner, Lemon Squeezy, to complete your purchase.
                         </div>
                     </div>
 
                     <div className="flex gap-4">
                         <button
                             onClick={() => setStep(1)}
-                            className="flex-1 bg-white text-gray-900 border border-gray-200 py-4 text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors"
+                            disabled={loading}
+                            className="flex-1 bg-white text-gray-900 border border-gray-200 py-4 text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                             Back
                         </button>
@@ -187,7 +224,7 @@ export default function CheckoutPage() {
                             className="flex-1 bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                         >
                             {loading && <Loader2 size={16} className="animate-spin" />}
-                            I Have Paid
+                            {loading ? 'Processing...' : 'Proceed to Payment'}
                         </button>
                     </div>
                 </div>
