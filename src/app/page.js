@@ -51,6 +51,7 @@ const FeatureItem = ({ icon: Icon, title, desc, delay }) => (
 export default function Home() {
   const [paintings, setPaintings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const heroRef = useRef(null);
 
   const { scrollYProgress } = useScroll({
@@ -65,47 +66,74 @@ export default function Home() {
   useEffect(() => {
     async function fetch() {
       const data = await getPaintings();
-      setPaintings(data.slice(0, 3));
+      setPaintings(data.slice(0, 6));
       setLoading(false);
     }
     fetch();
   }, []);
 
+  // Slideshow logic
+  useEffect(() => {
+    if (paintings.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % paintings.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [paintings]);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#fafafa]">
 
-      {/* 1. IMMERSIVE HERO */}
-      <section ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden bg-white">
-        {/* Dynamic Background Elements */}
+      {/* 1. IMMERSIVE HERO WITH SLIDESHOW */}
+      <section ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+        {/* Background Slideshow */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-100/40 rounded-full blur-[120px] animate-pulse"></div>
-          <div className="absolute bottom-[0%] right-[-5%] w-[35%] h-[35%] bg-cyan-100/40 rounded-full blur-[120px] animate-pulse [animation-delay:2s]"></div>
-          <div className="absolute top-[20%] right-[15%] w-[10%] h-[10%] bg-amber-100/30 rounded-full blur-[80px]"></div>
+          {paintings.length > 0 ? (
+            paintings.map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: i === currentSlide ? 0.4 : 0 }}
+                transition={{ duration: 1.5 }}
+                className="absolute inset-0"
+              >
+                {p.images?.[0] && (
+                  <Image
+                    src={p.images[0]}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    priority={i === 0}
+                  />
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="absolute inset-0 bg-stone-900 opacity-50"></div>
+          )}
 
-          {/* Subtle Grid Pattern */}
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+          {/* Overlays for readability and depth */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 z-10"></div>
+          <div className="absolute inset-0 bg-black/20 z-10 backdrop-blur-[2px]"></div>
         </div>
 
         <motion.div
           style={{ y: heroY, opacity: heroOpacity, scale }}
-          className="relative z-10 max-w-7xl mx-auto px-6 text-center"
+          className="relative z-20 max-w-7xl mx-auto px-6 text-center"
         >
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="inline-block px-4 py-1.5 mb-8 text-[10px] uppercase tracking-[0.3em] font-bold text-violet-600 bg-violet-50 rounded-full">
+            <span className="inline-block px-4 py-1.5 mb-8 text-[10px] uppercase tracking-[0.3em] font-bold text-white bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               Hand-painted Originals
             </span>
-            <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-serif text-gray-900 tracking-tighter leading-[0.85] mb-8">
+            <h1 className="text-7xl md:text-9xl lg:text-[11.5rem] font-serif text-white tracking-tighter leading-[0.85] mb-12 drop-shadow-2xl">
               Chaos <br />
-              <span className="italic font-light text-gray-300">to</span> <span className="text-gradient">Silence.</span>
+              <span className="italic font-light text-gray-300">to</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-300">Silence.</span>
             </h1>
-            <p className="text-lg md:text-2xl text-gray-500 font-light max-w-2xl mx-auto leading-relaxed mb-12">
-              Contemporary acrylic masterpieces by Akshath. <br className="hidden md:block" />
-              Capture the essence of texture and raw emotion.
-            </p>
           </motion.div>
 
           <motion.div
@@ -116,53 +144,32 @@ export default function Home() {
           >
             <Link
               href="/gallery"
-              className="group relative px-10 py-5 bg-gray-900 text-white rounded-full font-medium overflow-hidden shadow-2xl transition-all hover:scale-105 active:scale-95"
+              className="group relative px-10 py-5 bg-white text-black rounded-full font-bold overflow-hidden shadow-2xl transition-all hover:scale-105 active:scale-95"
             >
-              <span className="relative z-10 flex items-center gap-2">
+              <span className="relative z-10 flex items-center gap-2 uppercase tracking-widest text-xs">
                 Explore Gallery <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </Link>
             <Link
               href="/about"
-              className="px-10 py-5 bg-white text-gray-900 border border-gray-100 rounded-full font-medium hover:bg-gray-50 transition-all hover:shadow-lg active:scale-95"
+              className="px-10 py-5 bg-transparent text-white border border-white/30 backdrop-blur-md rounded-full font-bold hover:bg-white/10 transition-all hover:shadow-lg active:scale-95 uppercase tracking-widest text-xs"
             >
-              The Artist's Journey
+              The Artist
             </Link>
           </motion.div>
         </motion.div>
 
-        {/* Floating Art Teasers */}
-        <div className="absolute bottom-10 left-10 hidden lg:block animate-bounce [animation-duration:4s]">
-          <div className="w-px h-24 bg-gradient-to-t from-gray-300 to-transparent"></div>
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="w-px h-12 bg-gradient-to-b from-white to-transparent"
+          />
         </div>
       </section>
 
-      {/* 2. EXHIBITION / VALUE SECTION (Bento) */}
-      <section className="py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureItem
-              icon={Paintbrush}
-              delay={0.1}
-              title="Tactile Texture"
-              desc="Deep impasto techniques that create physical presence and shadows on every canvas."
-            />
-            <FeatureItem
-              icon={ShieldCheck}
-              delay={0.2}
-              title="Collector Grade"
-              desc="Archival quality materials ensuring your investment lasts a lifetime. Signed & Certified."
-            />
-            <FeatureItem
-              icon={Heart}
-              delay={0.3}
-              title="Pure Emotion"
-              desc="Each stroke is a piece of a story, moving from the artist's studio to your soul."
-            />
-          </div>
-        </div>
-      </section>
+      {/* 2. EXHIBITION / VALUE SECTION REMOVED AS REQUESTED */}
 
       {/* 3. FEATURED WORK (The Spotlight) */}
       <section className="py-32 bg-white relative overflow-hidden">
