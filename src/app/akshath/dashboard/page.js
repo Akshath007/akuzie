@@ -9,24 +9,7 @@ import { Trash2, Edit, ExternalLink, Image as ImageIcon, TrendingUp, Users, Shop
 
 // --- COMPONENTS ---
 
-const StatCard = ({ label, value, subtext, icon: Icon, trend }) => (
-    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-start justify-between hover:shadow-md transition-shadow">
-        <div>
-            <h3 className="text-xs uppercase tracking-widest text-gray-500 font-medium mb-1">{label}</h3>
-            <p className="text-3xl font-serif text-gray-900 mb-2">{value}</p>
-            {subtext && (
-                <div className="flex items-center gap-1 text-xs">
-                    {trend === 'up' && <ArrowUp size={12} className="text-emerald-500" />}
-                    {trend === 'down' && <ArrowDown size={12} className="text-red-500" />}
-                    <span className="text-gray-400">{subtext}</span>
-                </div>
-            )}
-        </div>
-        <div className="p-3 bg-gray-50 rounded-lg text-gray-400">
-            <Icon size={20} strokeWidth={1.5} />
-        </div>
-    </div>
-);
+import StatCard from '@/components/StatCard';
 
 const ActivityItem = ({ title, time, type }) => (
     <div className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0">
@@ -133,12 +116,14 @@ export default function DashboardPage() {
                     subtext="+12% from last month"
                     icon={TrendingUp}
                     trend="up"
+                    variant="violet"
                 />
                 <StatCard
                     label="Active Paintings"
                     value={paintings.length}
                     subtext={`${soldCount} sold so far`}
                     icon={ImageIcon}
+                    variant="blue"
                 />
                 <StatCard
                     label="Website Visits"
@@ -146,13 +131,15 @@ export default function DashboardPage() {
                     subtext="Last 30 days"
                     icon={Users}
                     trend="up"
+                    variant="amber"
                 />
                 <StatCard
-                    label="Interested"
+                    label="Interested Users"
                     value="24"
                     subtext="Carts & Inquiries"
                     icon={ShoppingCart}
                     trend="up"
+                    variant="emerald"
                 />
             </div>
 
