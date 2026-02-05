@@ -57,7 +57,7 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-serif text-gray-900">Dashboard</h1>
+                    <h1 className="text-3xl font-serif text-gray-900">Akshath</h1>
                     <p className="text-stone-500 font-light mt-1">Overview of your collection.</p>
                 </div>
                 <Link

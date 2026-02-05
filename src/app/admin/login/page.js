@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
         <div className="flex min-h-screen items-center justify-center p-6 bg-stone-50">
             <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white p-10 rounded-xl shadow-sm border border-stone-100 space-y-8">
                 <div className="text-center">
-                    <h1 className="text-2xl font-serif text-gray-900 mb-2">Admin Access</h1>
+                    <h1 className="text-2xl font-serif text-gray-900 mb-2">Akshath</h1>
                     <p className="text-xs text-stone-400">Please authenticate to continue.</p>
                 </div>
 
