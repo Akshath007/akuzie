@@ -3,11 +3,15 @@
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 export default function AddToCartButton({ painting }) {
     const { addToCart, cart, isLoaded } = useCart();
+    const { user, loginWithGoogle } = useAuth(); // We might not force login to ADD, but to CHECKOUT.
     const router = useRouter();
     const [isInCart, setIsInCart] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (isLoaded) {
@@ -24,9 +28,9 @@ export default function AddToCartButton({ painting }) {
         return (
             <button
                 onClick={() => router.push('/cart')}
-                className="w-full bg-gray-100 text-gray-900 border border-gray-200 py-4 text-sm uppercase tracking-widest hover:bg-gray-200 transition-colors"
+                className="w-full bg-stone-100 text-stone-900 border border-stone-200 py-4 text-xs uppercase tracking-[0.2em] hover:bg-stone-200 transition-colors"
             >
-                View inside Cart
+                View in Cart
             </button>
         );
     }
@@ -34,7 +38,7 @@ export default function AddToCartButton({ painting }) {
     return (
         <button
             onClick={handleAdd}
-            className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors"
+            className="w-full bg-gray-900 text-white py-4 text-xs uppercase tracking-[0.2em] hover:bg-gray-800 transition-colors"
         >
             Add to Cart
         </button>

@@ -5,7 +5,17 @@ import { getPaintings, deletePainting, updatePainting } from '@/lib/data';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, PAINTING_STATUS } from '@/lib/utils';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// Helper for Stats
+const StatCard = ({ label, value, subtext }) => (
+    <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+        <h3 className="text-xs uppercase tracking-widest text-stone-400 mb-2">{label}</h3>
+        <p className="text-3xl font-serif text-gray-900">{value}</p>
+        {subtext && <p className="text-xs text-stone-400 mt-2">{subtext}</p>}
+    </div>
+);
 
 export default function DashboardPage() {
     const [paintings, setPaintings] = useState([]);
@@ -22,7 +32,7 @@ export default function DashboardPage() {
     }, []);
 
     const handleDelete = async (id) => {
-        if (confirm("Are you sure?")) {
+        if (confirm("Are you sure? This action cannot be undone.")) {
             await deletePainting(id);
             fetchPaintings();
         }
@@ -37,65 +47,102 @@ export default function DashboardPage() {
         fetchPaintings();
     };
 
-    if (loading) return <div>Loading...</div>;
+    // Computed Stats
+    const totalValue = paintings.reduce((acc, p) => acc + (Number(p.price) || 0), 0);
+    const soldCount = paintings.filter(p => p.status === PAINTING_STATUS.SOLD).length;
+
+    if (loading) return <div className="p-8 text-center text-stone-400">Loading Dashboard...</div>;
 
     return (
-        <div>
-            <h1 className="text-2xl font-light mb-8">Dashboard</h1>
+        <div className="space-y-8">
+            <div className="flex justify-between items-end">
+                <div>
+                    <h1 className="text-3xl font-serif text-gray-900">Dashboard</h1>
+                    <p className="text-stone-500 font-light mt-1">Overview of your collection.</p>
+                </div>
+                <Link
+                    href="/admin/add"
+                    className="bg-gray-900 text-white px-6 py-3 rounded-lg text-xs uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-lg"
+                >
+                    + Add New
+                </Link>
+            </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500 uppercase tracking-wider text-xs font-medium">
-                        <tr>
-                            <th className="p-4">Image</th>
-                            <th className="p-4">Title</th>
-                            <th className="p-4">Price</th>
-                            <th className="p-4">Status</th>
-                            <th className="p-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {paintings.map((painting) => (
-                            <tr key={painting.id} className="hover:bg-gray-50">
-                                <td className="p-4">
-                                    <div className="relative w-12 h-12 bg-gray-100">
-                                        {painting.images && painting.images[0] && (
-                                            <Image
-                                                src={painting.images[0]}
-                                                alt={painting.title}
-                                                fill
-                                                className="object-cover rounded-sm"
-                                            />
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="p-4 font-medium">{painting.title}</td>
-                                <td className="p-4 text-gray-500">{formatPrice(painting.price)}</td>
-                                <td className="p-4">
-                                    <button
-                                        onClick={() => toggleStatus(painting)}
-                                        className={`px-3 py-1 text-xs rounded-full uppercase tracking-wider border ${painting.status === PAINTING_STATUS.AVAILABLE
-                                                ? "bg-green-50 text-green-600 border-green-100"
-                                                : "bg-gray-100 text-gray-500 border-gray-200"
-                                            }`}
-                                    >
-                                        {painting.status}
-                                    </button>
-                                </td>
-                                <td className="p-4">
-                                    <div className="flex gap-4">
-                                        <Link href={`/admin/edit/${painting.id}`} className="text-gray-400 hover:text-gray-900">
-                                            <Edit size={16} />
-                                        </Link>
-                                        <button onClick={() => handleDelete(painting.id)} className="text-gray-400 hover:text-red-500">
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </td>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard label="Total Paintings" value={paintings.length} />
+                <StatCard label="Total Value" value={formatPrice(totalValue)} subtext="Potential revenue" />
+                <StatCard label="Sold Pieces" value={soldCount} subtext={`${Math.round((soldCount / (paintings.length || 1)) * 100)}% sell-through`} />
+            </div>
+
+            {/* Table / List */}
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-stone-50 text-stone-500 uppercase tracking-wider text-[10px] font-medium border-b border-stone-100">
+                            <tr>
+                                <th className="p-5 pl-6">Preview</th>
+                                <th className="p-5">Details</th>
+                                <th className="p-5">Price</th>
+                                <th className="p-5">Status</th>
+                                <th className="p-5 text-right pr-6">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-stone-50">
+                            {paintings.map((painting) => (
+                                <tr key={painting.id} className="hover:bg-stone-50/50 transition-colors group">
+                                    <td className="p-5 pl-6">
+                                        <div className="relative w-16 h-20 bg-stone-100 rounded overflow-hidden border border-stone-200">
+                                            {painting.images && painting.images[0] ? (
+                                                <Image
+                                                    src={painting.images[0]}
+                                                    alt={painting.title}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-stone-300"><ImageIcon size={16} /></div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="p-5">
+                                        <p className="font-serif text-base text-gray-900 mb-1">{painting.title}</p>
+                                        <p className="text-xs text-stone-400">{painting.size} • {painting.medium}</p>
+                                    </td>
+                                    <td className="p-5 font-medium text-gray-600">
+                                        {formatPrice(painting.price)}
+                                    </td>
+                                    <td className="p-5">
+                                        <button
+                                            onClick={() => toggleStatus(painting)}
+                                            className={cn(
+                                                "px-3 py-1 text-[10px] rounded-full uppercase tracking-widest font-medium border transition-all",
+                                                painting.status === PAINTING_STATUS.AVAILABLE
+                                                    ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
+                                                    : "bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200"
+                                            )}
+                                        >
+                                            {painting.status}
+                                        </button>
+                                    </td>
+                                    <td className="p-5 text-right pr-6">
+                                        <div className="flex items-center justify-end gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                            <Link href={`/painting/${painting.id}`} target="_blank" className="p-2 hover:bg-stone-100 rounded-full text-stone-400 hover:text-gray-900">
+                                                <ExternalLink size={16} />
+                                            </Link>
+                                            <Link href={`/admin/edit/${painting.id}`} className="p-2 hover:bg-blue-50 rounded-full text-stone-400 hover:text-blue-600">
+                                                <Edit size={16} />
+                                            </Link>
+                                            <button onClick={() => handleDelete(painting.id)} className="p-2 hover:bg-red-50 rounded-full text-stone-400 hover:text-red-500">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

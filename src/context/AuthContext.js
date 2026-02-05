@@ -1,7 +1,7 @@
 'use client';
 
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
@@ -14,23 +14,21 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                const allowedAdmins = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
-                if (allowedAdmins.includes(user.email)) {
-                    setUser(user);
-                } else {
-                    alert("Access Denied: Not an admin");
-                    signOut(auth);
-                    setUser(null);
-                }
-            } else {
-                setUser(null);
-            }
+            setUser(user);
             setLoading(false);
         });
-
         return () => unsubscribe();
     }, []);
+
+    const loginWithGoogle = async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Error signing in with Google", error);
+            throw error;
+        }
+    };
 
     const login = (email, password) => {
         return signInWithEmailAndPassword(auth, email, password);
@@ -41,7 +39,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout }}>
             {children}
         </AuthContext.Provider>
     );
