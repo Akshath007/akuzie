@@ -25,7 +25,7 @@ export default function EditPaintingPage({ params }) {
                 setFormData(data);
             } else {
                 alert("Painting not found");
-                router.push('/admin/dashboard');
+                router.push('/akshath/dashboard');
             }
             setLoading(false);
         }
@@ -74,7 +74,7 @@ export default function EditPaintingPage({ params }) {
 
     return (
         <div className="max-w-2xl mx-auto py-12 px-6">
-            <Link href="/admin/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 hover:text-gray-900 mb-8 transition-colors">
+            <Link href="/akshath/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 hover:text-gray-900 mb-8 transition-colors">
                 <ArrowLeft size={14} /> Back to Dashboard
             </Link>
 

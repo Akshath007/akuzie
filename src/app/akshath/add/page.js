@@ -46,7 +46,7 @@ export default function AddPaintingPage() {
                 price: Number(formData.price),
                 images: [directUrl],
             });
-            router.push('/admin/dashboard');
+            router.push('/akshath/dashboard');
         } catch (error) {
             console.error(error);
             alert("Error adding painting");
@@ -57,7 +57,7 @@ export default function AddPaintingPage() {
 
     return (
         <div className="max-w-2xl mx-auto py-12 px-6">
-            <Link href="/admin/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 hover:text-gray-900 mb-8 transition-colors">
+            <Link href="/akshath/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 hover:text-gray-900 mb-8 transition-colors">
                 <ArrowLeft size={14} /> Back to Dashboard
             </Link>
 

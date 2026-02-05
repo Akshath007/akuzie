@@ -61,7 +61,7 @@ export default function DashboardPage() {
                     <p className="text-stone-500 font-light mt-1">Overview of your collection.</p>
                 </div>
                 <Link
-                    href="/admin/add"
+                    href="/akshath/add"
                     className="bg-gray-900 text-white px-6 py-3 rounded-lg text-xs uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-lg"
                 >
                     + Add New
@@ -130,7 +130,7 @@ export default function DashboardPage() {
                                             <Link href={`/painting/${painting.id}`} target="_blank" className="p-2 hover:bg-stone-100 rounded-full text-stone-400 hover:text-gray-900">
                                                 <ExternalLink size={16} />
                                             </Link>
-                                            <Link href={`/admin/edit/${painting.id}`} className="p-2 hover:bg-blue-50 rounded-full text-stone-400 hover:text-blue-600">
+                                            <Link href={`/akshath/edit/${painting.id}`} className="p-2 hover:bg-blue-50 rounded-full text-stone-400 hover:text-blue-600">
                                                 <Edit size={16} />
                                             </Link>
                                             <button onClick={() => handleDelete(painting.id)} className="p-2 hover:bg-red-50 rounded-full text-stone-400 hover:text-red-500">

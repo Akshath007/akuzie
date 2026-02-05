@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
         setLoading(true);
         try {
             await login(email, password);
-            router.push('/admin/dashboard');
+            router.push('/akshath/dashboard');
         } catch (err) {
             setError('Invalid credentials');
             setLoading(false);
