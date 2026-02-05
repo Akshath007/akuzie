@@ -1,146 +1,191 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { ArrowRight, Sparkles, Paintbrush, ShieldCheck } from 'lucide-react';
 import { getPaintings } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
-import Image from 'next/image';
+import { cn } from '@/lib/utils';
+
+// --- COMPONENTS ---
+
+const FeatureCard = ({ icon: Icon, title, desc }) => (
+  <motion.div
+    whileHover={{ y: -5 }}
+    className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center text-center group"
+  >
+    <div className="p-3 bg-violet-50 text-violet-600 rounded-full mb-4 group-hover:scale-110 transition-transform">
+      <Icon size={24} />
+    </div>
+    <h3 className="font-serif text-lg text-gray-900 mb-2">{title}</h3>
+    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+  </motion.div>
+);
+
+const SectionHeading = ({ children, subtitle }) => (
+  <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+    <span className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 bg-violet-50 px-3 py-1 rounded-full">{subtitle}</span>
+    <h2 className="text-4xl md:text-5xl font-serif text-gray-900 leading-tight">{children}</h2>
+  </div>
+);
 
 export default function Home() {
   const [paintings, setPaintings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    async function fetchPaintings() {
+    async function fetch() {
       const data = await getPaintings();
-      setPaintings(data.slice(0, 6)); // Limit to first 6 for home
-      setLoading(false);
+      setPaintings(data.slice(0, 3));
     }
-    fetchPaintings();
+    fetch();
   }, []);
 
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div ref={containerRef} className="flex flex-col min-h-screen">
 
-      {/* 
-        HERO SECTION 
-        - Mobile: Image top, Text bottom (stacked)
-        - Desktop: Text left, Image right (2 columns)
-        - Full height on desktop
-      */}
-      <section className="relative w-full pt-16 md:pt-0 md:h-screen flex items-center bg-[#fafafa]">
-        <div className="max-w-7xl mx-auto w-full px-6 lg:px-12 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center h-full">
+      {/* 1. HERO SECTION (Redesigned) */}
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-white pt-20">
+        {/* Background Gradients */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-100/50 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-100/50 rounded-full blur-[100px] -translate-x-1/3 translate-y-1/3"></div>
 
-          {/* Left Content (Text) */}
-          <div className="order-2 md:order-1 flex flex-col justify-center space-y-8 md:space-y-12 pb-12 md:pb-0 fade-in delay-100">
-            <div>
-              <h2 className="text-xs font-sans uppercase tracking-[0.25em] text-gray-500 mb-6 font-medium">
-                Handmade Collection
-              </h2>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-gray-900 leading-[1.1] mb-6">
-                Silence in <br />
-                <span className="italic text-gray-400">Chaos.</span>
-              </h1>
-              <p className="text-lg md:text-xl text-gray-600 font-light max-w-md leading-relaxed">
-                Original acrylic paintings on canvas. <br className="hidden md:block" />
-                A curated exploration of texture, form, and emotion.
-              </p>
-            </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-200 bg-white/50 backdrop-blur-sm text-xs font-medium text-gray-600 mb-6 hover:bg-white transition-colors cursor-default">
+              <Sparkles size={12} className="text-amber-400" />
+              New Collection: "Ethereal Dreams" is live
+            </span>
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-gray-900 tracking-tight leading-[0.9] mb-6">
+              Modern <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-cyan-500 italic pr-4">Artistry.</span>
+            </h1>
+            <p className="text-lg md:text-xl text-gray-500 font-light max-w-xl mx-auto leading-relaxed">
+              Curated handmade acrylic paintings that breathe life into your space.
+              Minimalist, abstract, and profoundly expressive.
+            </p>
+          </motion.div>
 
-            <div className="flex items-center gap-8">
-              <Link
-                href="/gallery"
-                className="group relative inline-flex items-center justify-center px-10 py-5 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] overflow-hidden transition-all hover:bg-gray-800"
-              >
-                <span className="relative z-10 transition-colors">View Gallery</span>
-              </Link>
-              <Link href="/about" className="text-xs uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900 transition-colors">
-                The Artist
-              </Link>
-            </div>
-          </div>
-
-          {/* Right Content (Image) */}
-          <div className="order-1 md:order-2 h-[50vh] md:h-full w-full relative bg-gray-100 overflow-hidden fade-in delay-200">
-            {/* 
-                  Using a placeholder or featured image. 
-                  In a real scenario, this would be a specific featured painting URL. 
-               */}
-            <div className="absolute inset-0 md:inset-x-0 md:top-[15%] md:bottom-[15%] md:left-[10%] bg-white shadow-2xl p-4 md:p-6 rotate-1 hover:rotate-0 transition-transform duration-700 ease-out">
-              <div className="w-full h-full relative bg-stone-200 overflow-hidden">
-                {paintings.length > 0 && paintings[0].images && (
-                  <Image
-                    src={paintings[0].images[0]}
-                    alt="Featured Artwork"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                )}
-                {!paintings.length && <div className="w-full h-full bg-stone-200"></div>}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 
-        GALLERY PREVIEW SECTION 
-        - Strict Grid: 1 col (mobile), 2 col (tablet), 3 col (desktop)
-        - Clean spacing
-      */}
-      <section id="gallery" className="py-20 md:py-32 px-6 lg:px-12 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-            <div className="max-w-xl">
-              <h2 className="text-3xl md:text-5xl font-serif text-gray-900 mb-6 leading-tight">Latest Acquisitions.</h2>
-              <p className="text-gray-500 font-light text-lg">Selected works currently available for purchase.</p>
-            </div>
-            <Link href="/gallery" className="hidden md:flex items-center gap-3 text-xs uppercase tracking-widest text-gray-900 hover:text-gray-600 transition-all group">
-              View All <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+          >
+            <Link
+              href="/gallery"
+              className="px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all hover:scale-105 shadow-xl shadow-gray-200 flex items-center gap-2"
+            >
+              Explore Gallery <ArrowRight size={16} />
             </Link>
-          </div>
+            <Link
+              href="/about"
+              className="px-8 py-4 bg-white text-gray-900 border border-gray-200 rounded-full font-medium hover:bg-gray-50 transition-colors"
+            >
+              Meet Akshath
+            </Link>
+          </motion.div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
+          {/* Hero Image Collage */}
+          <motion.div
+            style={{ y }}
+            className="mt-20 relative w-full max-w-5xl mx-auto aspect-[16/9] hidden md:block"
+          >
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent z-20"></div>
+            <div className="grid grid-cols-3 gap-4 transform rotate-6 scale-110 opacity-80 hover:opacity-100 hover:rotate-0 hover:scale-100 transition-all duration-1000 ease-out">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-4">
-                  <div className="aspect-[4/5] bg-gray-100 animate-pulse"></div>
-                  <div className="h-4 bg-gray-100 w-2/3 animate-pulse"></div>
+                <div key={i} className={cn("rounded-2xl overflow-hidden shadow-2xl bg-gray-100 aspect-[3/4]", i === 1 ? "mt-12" : "")}>
+                  {paintings[i - 1]?.images?.[0] && (
+                    <Image
+                      src={paintings[i - 1].images[0]}
+                      alt="Art"
+                      width={400}
+                      height={600}
+                      className="object-cover w-full h-full hover:scale-110 transition-transform duration-700"
+                    />
+                  )}
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-8 md:gap-x-12">
-              {paintings.map((painting, idx) => (
-                <div key={painting.id} className="fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
-                  <PaintingCard painting={painting} />
-                </div>
-              ))}
-            </div>
-          )}
+          </motion.div>
+        </div>
+      </section>
 
-          <div className="mt-20 text-center md:hidden">
-            <Link href="/gallery" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest">
-              View All Works
+      {/* 2. FEATURES GRID */}
+      <section className="py-24 bg-[#fafafa]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={Paintbrush}
+              title="100% Handmade"
+              desc="Every stroke is applied by hand using premium acrylics on gallery-wrapped canvas."
+            />
+            <FeatureCard
+              icon={ShieldCheck}
+              title="Authenticity Guaranteed"
+              desc="Each piece comes with a signed Certificate of Authenticity."
+            />
+            <FeatureCard
+              icon={Sparkles}
+              title="Custom Commissions"
+              desc="Looking for something specific? We accept requests for custom sizes and palettes."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. LATEST WORK */}
+      <section className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <SectionHeading subtitle="The Collection">
+            Latest <span className="italic text-gray-400">Masterpieces</span>
+          </SectionHeading>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            {paintings.map((painting) => (
+              <div key={painting.id} className="group cursor-pointer">
+                <PaintingCard painting={painting} />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-20 text-center">
+            <Link href="/gallery" className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest border-b border-gray-900 pb-1 hover:text-violet-600 hover:border-violet-600 transition-colors">
+              View Complete Archive <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 
-        PHILOSOPHY STRIP 
-        - Minimal, centered text 
-      */}
-      <section className="py-24 md:py-40 bg-[#fafafa] px-6">
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          <div className="w-px h-16 bg-gray-300 mx-auto mb-8"></div>
-          <p className="text-2xl md:text-4xl font-serif leading-relaxed text-gray-900">
-            "We don't make mistakes, just happy little accidents."
+      {/* 4. NEWSLETTER / CTA */}
+      <section className="py-32 bg-gray-900 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-600/20 rounded-full blur-[100px]"></div>
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-6 space-y-8">
+          <h2 className="text-4xl md:text-6xl font-serif">Join the Collector's List</h2>
+          <p className="text-gray-400 font-light text-lg max-w-2xl mx-auto">
+            Be the first to know about new releases, behind-the-scenes content, and exclusive studio sales.
           </p>
-          <p className="text-sm font-sans uppercase tracking-widest text-gray-500">— Bob Ross & Akshath</p>
+          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto pt-4">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="flex-1 bg-white/10 border border-white/20 rounded-full px-6 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 backdrop-blur-sm"
+            />
+            <button className="bg-white text-gray-900 px-8 py-4 rounded-full font-medium hover:bg-gray-100 transition-colors">
+              Subscribe
+            </button>
+          </div>
         </div>
       </section>
 
