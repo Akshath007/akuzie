@@ -4,42 +4,51 @@ import { configureLemonSqueezy } from '@/lib/lemonsqueezy';
 
 export async function POST(request) {
     try {
-        // Initialize Lemon Squeezy
         configureLemonSqueezy();
 
         const body = await request.json();
-        const { variantId, productName, customData } = body;
+        const { orderId, customerName, customerEmail, amount, items } = body;
 
-        if (!variantId) {
+        if (!amount || amount <= 0) {
             return NextResponse.json(
-                { error: 'Variant ID is required' },
+                { error: 'Invalid amount' },
                 { status: 400 }
             );
         }
 
-        // Create a checkout session
-        const checkout = await createCheckout(
-            process.env.LEMONSQUEEZY_STORE_ID,
-            variantId,
-            {
-                checkoutData: {
-                    custom: customData || {},
-                },
-                checkoutOptions: {
-                    embed: false,
-                    media: false,
-                    logo: true,
-                    desc: true,
-                    discount: true,
-                    dark: false,
-                    subscriptionPreview: true,
-                    buttonColor: '#7c3aed', // Violet brand color
-                },
-                expiresAt: null,
-                preview: false,
-                testMode: process.env.NODE_ENV !== 'production',
-            }
-        );
+        const storeId = process.env.LEMONSQUEEZY_STORE_ID;
+        const variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ID;
+
+        if (!storeId || !variantId) {
+            return NextResponse.json(
+                { error: 'Lemon Squeezy configuration missing' },
+                { status: 500 }
+            );
+        }
+
+        // Create checkout with custom price
+        const checkout = await createCheckout(storeId, variantId, {
+            checkoutData: {
+                email: customerEmail || undefined,
+                name: customerName || undefined,
+                custom: {
+                    orderId,
+                    items: JSON.stringify(items),
+                }
+            },
+            checkoutOptions: {
+                embed: false,
+                media: false,
+                logo: true,
+                desc: true,
+                discount: true,
+                dark: false,
+                buttonColor: '#7c3aed',
+            },
+            expiresAt: null,
+            preview: false,
+            testMode: false, // Production mode
+        });
 
         if (checkout.error) {
             throw new Error(checkout.error.message);
