@@ -39,6 +39,16 @@ export default function Navbar() {
         }
     }, [showSearch]);
 
+    // Disable body scroll when menu is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [isOpen]);
+
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
@@ -73,7 +83,10 @@ export default function Navbar() {
                         </div>
 
                         {/* Logo (Centered on mobile, Left on desktop) */}
-                        <Link href="/" className="font-serif text-3xl text-gray-900 tracking-wide z-50 absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:mr-12">
+                        <Link href="/" className={cn(
+                            "font-serif text-2xl md:text-3xl text-gray-900 tracking-wide z-50 absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:mr-12 transition-opacity duration-300",
+                            (isOpen || showSearch) ? "opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto" : "opacity-100"
+                        )}>
                             Akuzie
                         </Link>
 
@@ -162,13 +175,14 @@ export default function Navbar() {
                 {/* Mobile Menu View */}
                 <div
                     className={cn(
-                        "fixed inset-0 bg-white z-40 flex flex-col justify-center items-center gap-8 transition-transform duration-500 ease-in-out md:hidden",
+                        "fixed inset-0 bg-white z-40 flex flex-col justify-start items-center pt-32 gap-12 transition-all duration-500 ease-in-out md:hidden",
                         isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
                     )}
                 >
-                    <Link href="/" className="font-serif text-4xl text-gray-900">Home</Link>
-                    <Link href="/gallery" className="font-serif text-4xl text-gray-900">Gallery</Link>
-                    <Link href="/cart" className="font-serif text-4xl text-gray-900">Cart ({cart.length})</Link>
+                    <Link href="/" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">Home</Link>
+                    <Link href="/gallery" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">Archive</Link>
+                    <Link href="/cart" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">Cart ({cart.length})</Link>
+                    <Link href="/about" className="font-serif text-5xl text-gray-900 hover:text-violet-600 transition-colors">The Artist</Link>
                 </div>
             </nav>
         </>
