@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+
 import { ShoppingBag, Menu, X, Search, User } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -89,18 +89,10 @@ export default function Navbar() {
 
                         {/* Logo (Centered on mobile, Left on desktop) */}
                         <Link href="/" className={cn(
-                            "relative z-50 absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:mr-12 transition-opacity duration-300",
+                            "font-serif text-2xl md:text-3xl text-gray-900 tracking-wide z-50 absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:mr-12 transition-opacity duration-300",
                             (isOpen || showSearch) ? "opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto" : "opacity-100"
                         )}>
-                            <div className="relative w-32 h-10 md:w-40 md:h-12">
-                                <Image
-                                    src="/logo.png"
-                                    alt="Akuzie"
-                                    fill
-                                    className="object-contain"
-                                    priority
-                                />
-                            </div>
+                            Akuzie
                         </Link>
 
                         {/* Desktop Nav */}

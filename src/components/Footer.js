@@ -2,7 +2,7 @@
 
 import { Instagram, Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+
 
 import { usePathname } from 'next/navigation';
 
@@ -18,14 +18,8 @@ export default function Footer() {
 
 
                 {/* Simple Logo */}
-                <Link href="/" className="transition-opacity hover:opacity-80">
-                    <Image
-                        src="/logo.png"
-                        alt="Akuzie"
-                        width={180}
-                        height={60}
-                        className="w-auto h-12 md:h-16 object-contain"
-                    />
+                <Link href="/" className="font-serif text-3xl tracking-tighter text-gray-900 transition-colors hover:text-violet-600">
+                    akuzie
                 </Link>
 
                 {/* Social Symbols */}
