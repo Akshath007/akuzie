@@ -65,7 +65,7 @@ export const metadata = {
     google: 'google-site-verification=google9cfe29dd6eccd1c1',
     yandex: 'yandex-verification=YOUR_VERIFICATION_CODE', // Placeholder
     other: {
-      'msvalidate.01': 'YOUR_BING_VERIFICATION_CODE', // Placeholder
+      'msvalidate.01': '3EEFA2BC8606071A2BC80F135DD9F5E8',
     },
   },
 };
