@@ -19,25 +19,25 @@ const playfair = Playfair_Display({
 export const metadata = {
   metadataBase: new URL('https://akuzie.in'),
   title: {
-    default: "Akuzie | Handmade Creations & Art",
+    default: "Akuzie | Where Everything Hits Different",
     template: "%s | Akuzie"
   },
-  description: "Exclusive handmade creations including acrylic paintings, cozy crochet, and unique art for your home. Discover something special.",
-  keywords: ["art", "paintings", "crochet", "handmade", "gifts", "home decor", "unique gifts", "akuzie", "crafts"],
+  description: "A dynamic digital space that connects it all in one place.",
+  keywords: ["akuzie", "digital space", "dynamic", "platform", "connect", "experience", "online"],
   authors: [{ name: "Akshath" }],
   creator: "Akshath",
   publisher: "Akuzie",
   openGraph: {
-    title: "Akuzie | Handmade Creations & Art",
-    description: "Exclusive handmade creations. Discover unique paintings, crochet, and art for your home.",
+    title: "Akuzie | Where Everything Hits Different",
+    description: "A dynamic digital space that connects it all in one place.",
     url: 'https://akuzie.in',
     siteName: 'Akuzie',
     images: [
       {
-        url: '/opengraph-image', // Dynamic image we will create
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'Akuzie - Handmade Creations',
+        alt: 'Akuzie - Where Everything Hits Different',
       },
     ],
     locale: 'en_US',
@@ -45,10 +45,10 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Akuzie | Handmade Creations & Art",
-    description: "Exclusive handmade creations. Discover unique paintings, crochet, and art.",
-    images: ['/opengraph-image'], // Dynamic image
-    creator: '@akuzie_art', // Replace with actual handle if available
+    title: "Akuzie | Where Everything Hits Different",
+    description: "A dynamic digital space that connects it all in one place.",
+    images: ['/opengraph-image'],
+    creator: '@akuzie_art',
   },
   robots: {
     index: true,

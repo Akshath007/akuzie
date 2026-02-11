@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'Akuzie | Handmade Acrylic Paintings';
+export const alt = 'Akuzie | Where Everything Hits Different';
 export const size = {
     width: 1200,
     height: 630,
@@ -76,7 +76,7 @@ export default async function Image() {
                         lineHeight: 1.4,
                     }}
                 >
-                    Exclusive Handmade Creations & Art
+                    Where Everything Hits Different
                 </div>
             </div>
         ),
