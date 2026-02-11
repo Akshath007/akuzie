@@ -10,15 +10,17 @@ function GalleryContent() {
     const [loading, setLoading] = useState(true);
     const searchParams = useSearchParams();
     const query = searchParams.get('q') || '';
+    const category = searchParams.get('category') || 'painting'; // Default to painting if no category
 
     useEffect(() => {
         async function fetchPaintings() {
-            const data = await getPaintings();
+            setLoading(true);
+            const data = await getPaintings(category);
             setPaintings(data);
             setLoading(false);
         }
         fetchPaintings();
-    }, []);
+    }, [category]);
 
     const filteredPaintings = useMemo(() => {
         if (!query) return paintings;
@@ -36,7 +38,9 @@ function GalleryContent() {
 
                 {/* Header */}
                 <div className="mb-20 text-center max-w-2xl mx-auto fade-in">
-                    <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-6">Archive</h1>
+                    <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-6">
+                        {category === 'crochet' ? 'Cozy Crochet' : 'Art Collection'}
+                    </h1>
                     {query && (
                         <p className="text-gray-500 font-light mb-4">Search results for "{query}"</p>
                     )}

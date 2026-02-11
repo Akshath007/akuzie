@@ -11,6 +11,7 @@ import StatCard from '@/components/StatCard';
 export default function DashboardPage() {
     const [paintings, setPaintings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('all'); // all, painting, crochet
 
     const fetchPaintings = async () => {
         const data = await getPaintings();
@@ -36,6 +37,14 @@ export default function DashboardPage() {
         await updatePainting(painting.id, { status: newStatus });
         fetchPaintings();
     };
+
+    // Filter logic
+    const filteredItems = paintings.filter(p => {
+        if (filter === 'all') return true;
+        // Handle legacy items without category as 'painting'
+        const cat = p.category || 'painting';
+        return cat === filter;
+    });
 
     // Computed Stats
     const totalValue = paintings.reduce((acc, p) => acc + (Number(p.price) || 0), 0);
@@ -93,7 +102,23 @@ export default function DashboardPage() {
 
             {/* INVENTORY SECTION */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6">
-                <h2 className="text-xl font-serif text-gray-900 mb-6">Inventory</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-serif text-gray-900">Inventory</h2>
+                    <div className="flex bg-gray-100 rounded-lg p-1">
+                        {['all', 'painting', 'crochet'].map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={cn(
+                                    "px-4 py-1.5 rounded-md text-xs font-medium uppercase tracking-wider transition-all",
+                                    filter === f ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                                )}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -106,7 +131,7 @@ export default function DashboardPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm">
-                            {paintings.map((painting) => (
+                            {filteredItems.map((painting) => (
                                 <tr key={painting.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0 white-space-nowrap">
                                     <td className="py-4 pl-4 min-w-[200px]">
                                         <div className="flex items-center gap-4">
@@ -117,7 +142,7 @@ export default function DashboardPage() {
                                             </div>
                                             <div>
                                                 <p className="font-serif text-gray-900 font-medium truncate max-w-[150px]">{painting.title}</p>
-                                                <p className="text-xs text-gray-400 truncate">{painting.medium}</p>
+                                                <p className="text-xs text-gray-400 truncate">{painting.category === 'crochet' ? 'Crochet' : painting.medium}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -156,4 +181,3 @@ export default function DashboardPage() {
         </div>
     );
 }
-

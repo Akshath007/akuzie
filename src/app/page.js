@@ -54,8 +54,25 @@ export default function Home() {
 
   useEffect(() => {
     async function fetch() {
-      const data = await getPaintings();
-      setPaintings(data.slice(0, 6));
+      // Parallel fetch for 50/50 split
+      const [paintingsData, crochetData] = await Promise.all([
+        getPaintings('painting'),
+        getPaintings('crochet')
+      ]);
+
+      const topPaintings = paintingsData.slice(0, 3);
+      const topCrochet = crochetData.slice(0, 3);
+
+      // Interleave: [P, C, P, C, P, C]
+      const mixed = [];
+      const maxLength = Math.max(topPaintings.length, topCrochet.length);
+
+      for (let i = 0; i < maxLength; i++) {
+        if (topPaintings[i]) mixed.push(topPaintings[i]);
+        if (topCrochet[i]) mixed.push(topCrochet[i]);
+      }
+
+      setPaintings(mixed);
       setLoading(false);
     }
     fetch();
@@ -78,7 +95,7 @@ export default function Home() {
             </FadeIn>
             <FadeIn direction="left">
               <Link href="/gallery" className="group flex items-center gap-3 text-xs uppercase tracking-[0.3em] font-bold text-gray-900 hover:text-violet-600 transition-colors">
-                View All Archive <ExternalLink size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                View Gallery <ExternalLink size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </Link>
             </FadeIn>
           </div>

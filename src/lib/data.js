@@ -2,19 +2,38 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { PAINTING_STATUS, ORDER_STATUS } from "./utils";
 
-// Paintings
-export async function getPaintings() {
+// Paintings and Crochet
+export async function getPaintings(category = null) {
     const paintingsCol = collection(db, "paintings");
-    const q = query(paintingsCol, orderBy("createdAt", "desc"));
+    let q;
+
+    // NOTE: Legacy items have no 'category'. They are implicitly 'painting'.
+    // Firestore queries exclude documents missing the field in a 'where' clause.
+    // So for 'painting', we must fetch ALL and filter in memory.
+    if (category && category !== 'painting') {
+        q = query(paintingsCol, where("category", "==", category), orderBy("createdAt", "desc"));
+    } else {
+        q = query(paintingsCol, orderBy("createdAt", "desc"));
+    }
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => {
+    const items = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
+            // Backwards compatibility: Default to 'painting' if no category
+            category: data.category || 'painting',
             createdAt: data.createdAt?.toMillis() || null,
         };
     });
+
+    // In-memory filter for 'painting' to exclude 'crochet' items if we fetched all
+    if (category === 'painting') {
+        return items.filter(item => item.category === 'painting');
+    }
+
+    return items;
 }
 
 export async function getPainting(id) {

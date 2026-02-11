@@ -98,16 +98,16 @@ export default function Navbar() {
                         {/* Desktop Nav */}
                         <div className="hidden md:flex items-center gap-12 flex-1">
                             <Link
-                                href="/"
+                                href="/gallery?category=painting"
                                 className="text-xs uppercase tracking-[0.2em] font-medium text-gray-500 hover:text-gray-900 transition-colors"
                             >
-                                Collection
+                                Art
                             </Link>
                             <Link
-                                href="/gallery"
+                                href="/gallery?category=crochet"
                                 className="text-xs uppercase tracking-[0.2em] font-medium text-gray-500 hover:text-gray-900 transition-colors"
                             >
-                                Archive
+                                Crochet
                             </Link>
                         </div>
 
@@ -224,7 +224,8 @@ export default function Navbar() {
             >
                 <div className="flex flex-col items-center gap-8">
                     <Link href="/" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Home</Link>
-                    <Link href="/gallery" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Archive</Link>
+                    <Link href="/gallery?category=painting" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Art</Link>
+                    <Link href="/gallery?category=crochet" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Crochet</Link>
                     <Link href="/cart" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Cart ({cart.length})</Link>
 
                     {user ? (

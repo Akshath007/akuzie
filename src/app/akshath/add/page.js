@@ -18,6 +18,7 @@ export default function AddPaintingPage() {
         title: '',
         price: '',
         size: '',
+        category: 'painting', // Default
         medium: 'Acrylic on Canvas',
         finish: 'Varnished',
         description: '',
@@ -107,6 +108,26 @@ export default function AddPaintingPage() {
                             Artwork Details
                         </h3>
                         <div className="space-y-6">
+                            <div>
+                                <label className="block text-xs uppercase tracking-widest text-gray-500 font-medium ml-1 mb-2">Category</label>
+                                <select
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all duration-200"
+                                    value={formData.category}
+                                    onChange={e => {
+                                        const cat = e.target.value;
+                                        setFormData({
+                                            ...formData,
+                                            category: cat,
+                                            medium: cat === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas',
+                                            finish: cat === 'crochet' ? 'Soft' : 'Varnished'
+                                        });
+                                    }}
+                                >
+                                    <option value="painting">Painting</option>
+                                    <option value="crochet">Crochet</option>
+                                </select>
+                            </div>
+
                             <Input
                                 label="Title"
                                 required
