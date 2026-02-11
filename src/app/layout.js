@@ -83,7 +83,7 @@ export default function RootLayout({ children }) {
           </main>
           <Footer />
         </Providers>
-        <GoogleAnalytics gaId="G-XXXXXXXXXX" /> {/* Replace with your GA4 Measurement ID */}
+        <GoogleAnalytics gaId="G-157L7EBZZG" /> {/* Replace with your GA4 Measurement ID */}
       </body>
     </html>
   );
