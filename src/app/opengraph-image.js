@@ -76,7 +76,7 @@ export default async function Image() {
                         lineHeight: 1.4,
                     }}
                 >
-                    Exclusive Handmade Acrylic Paintings
+                    Exclusive Handmade Creations & Art
                 </div>
             </div>
         ),
