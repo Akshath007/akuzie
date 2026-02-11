@@ -70,6 +70,8 @@ export const metadata = {
   },
 };
 
+import { GoogleAnalytics } from '@next/third-parties/google'
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} scroll-smooth`}>
@@ -81,6 +83,7 @@ export default function RootLayout({ children }) {
           </main>
           <Footer />
         </Providers>
+        <GoogleAnalytics gaId="G-XXXXXXXXXX" /> {/* Replace with your GA4 Measurement ID */}
       </body>
     </html>
   );
