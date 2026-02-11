@@ -19,17 +19,17 @@ const playfair = Playfair_Display({
 export const metadata = {
   metadataBase: new URL('https://akuzie.in'),
   title: {
-    default: "Akuzie | Handmade Acrylic Paintings",
+    default: "Akuzie | Handmade Creations & Art",
     template: "%s | Akuzie"
   },
-  description: "Exclusive handmade acrylic paintings on canvas. Discover unique abstract and contemporary art for your home or office.",
-  keywords: ["art", "paintings", "acrylic", "handmade", "canvas", "abstract art", "contemporary art", "home decor", "akuzie"],
+  description: "Exclusive handmade creations including acrylic paintings, cozy crochet, and unique art for your home. Discover something special.",
+  keywords: ["art", "paintings", "crochet", "handmade", "gifts", "home decor", "unique gifts", "akuzie", "crafts"],
   authors: [{ name: "Akshath" }],
   creator: "Akshath",
   publisher: "Akuzie",
   openGraph: {
-    title: "Akuzie | Handmade Acrylic Paintings",
-    description: "Exclusive handmade acrylic paintings on canvas. Discover unique abstract and contemporary art.",
+    title: "Akuzie | Handmade Creations & Art",
+    description: "Exclusive handmade creations. Discover unique paintings, crochet, and art for your home.",
     url: 'https://akuzie.in',
     siteName: 'Akuzie',
     images: [
@@ -37,7 +37,7 @@ export const metadata = {
         url: '/opengraph-image', // Dynamic image we will create
         width: 1200,
         height: 630,
-        alt: 'Akuzie - Handmade Acrylic Paintings',
+        alt: 'Akuzie - Handmade Creations',
       },
     ],
     locale: 'en_US',
@@ -45,8 +45,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Akuzie | Handmade Acrylic Paintings",
-    description: "Exclusive handmade acrylic paintings on canvas.",
+    title: "Akuzie | Handmade Creations & Art",
+    description: "Exclusive handmade creations. Discover unique paintings, crochet, and art.",
     images: ['/opengraph-image'], // Dynamic image
     creator: '@akuzie_art', // Replace with actual handle if available
   },

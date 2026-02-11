@@ -7,7 +7,7 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowRight, Sparkles, Paintbrush, ShieldCheck, Heart, ExternalLink } from 'lucide-react';
 import { getPaintings } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
-import { cn } from '@/lib/utils';
+import { cn, PAINTING_STATUS } from '@/lib/utils';
 
 // --- ANIMATED COMPONENTS ---
 
@@ -60,8 +60,12 @@ export default function Home() {
         getPaintings('crochet')
       ]);
 
-      const topPaintings = paintingsData.slice(0, 3);
-      const topCrochet = crochetData.slice(0, 3);
+      // Filter out sold items
+      const availablePaintings = paintingsData.filter(p => p.status !== 'sold');
+      const availableCrochet = crochetData.filter(p => p.status !== 'sold');
+
+      const topPaintings = availablePaintings.slice(0, 3);
+      const topCrochet = availableCrochet.slice(0, 3);
 
       // Interleave: [P, C, P, C, P, C]
       const mixed = [];
