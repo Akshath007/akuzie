@@ -8,6 +8,7 @@ import { ArrowRight, Sparkles, Paintbrush, ShieldCheck, Heart, ExternalLink } fr
 import { getPaintings } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
 import { cn, PAINTING_STATUS } from '@/lib/utils';
+import Hero from '@/components/Hero';
 
 // --- ANIMATED COMPONENTS ---
 
@@ -86,10 +87,13 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#fafafa]">
 
+      {/* 1. HERO SECTION */}
+      <Hero />
+
       {/* 2. EXHIBITION / VALUE SECTION REMOVED AS REQUESTED */}
 
-      {/* 3. FEATURED WORK (The Spotlight) - Now at the Top */}
-      <section className="pt-40 pb-32 bg-white relative overflow-hidden">
+      {/* 3. FEATURED WORK (The Spotlight) */}
+      <section id="new-releases" className="pt-24 pb-32 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
             <FadeIn direction="right">

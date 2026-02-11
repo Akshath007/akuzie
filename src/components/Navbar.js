@@ -61,6 +61,14 @@ export default function Navbar() {
         }
     };
 
+    const isHome = pathname === '/';
+    // If on home and not scrolled/open, use transparent style (white text)
+    const isTransparent = isHome && !scrolled && !isOpen;
+
+    // Text color class based on state
+    const textColorClass = isTransparent ? "text-white hover:text-gray-200" : "text-gray-900 hover:text-gray-600";
+    const logoColorClass = isTransparent ? "text-white" : "text-gray-900";
+
     return pathname.startsWith('/akshath') ? null : (
         <>
             <nav
@@ -76,20 +84,19 @@ export default function Navbar() {
                         <div className="flex items-center gap-4 md:hidden">
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
-                                className="text-gray-900 focus:outline-none"
+                                className={cn("focus:outline-none", textColorClass)}
                             >
                                 {isOpen ? <X size={24} strokeWidth={1} /> : <Menu size={24} strokeWidth={1} />}
                             </button>
-                            <button onClick={() => setShowSearch(!showSearch)} className="text-gray-900">
+                            <button onClick={() => setShowSearch(!showSearch)} className={textColorClass}>
                                 <Search size={20} strokeWidth={1.5} />
                             </button>
                         </div>
 
-
-
                         {/* Logo (Centered on mobile, Left on desktop) */}
                         <Link href="/" className={cn(
-                            "font-serif text-2xl md:text-3xl text-gray-900 tracking-wide z-50 absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:mr-12 transition-opacity duration-300",
+                            "font-serif text-2xl md:text-3xl tracking-wide z-50 absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:mr-12 transition-opacity duration-300",
+                            logoColorClass,
                             (isOpen || showSearch) ? "opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto" : "opacity-100"
                         )}>
                             Akuzie
@@ -99,13 +106,13 @@ export default function Navbar() {
                         <div className="hidden md:flex items-center gap-12 flex-1">
                             <Link
                                 href="/gallery?category=painting"
-                                className="text-xs uppercase tracking-[0.2em] font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                                className={cn("text-xs uppercase tracking-[0.2em] font-medium transition-colors", isTransparent ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-gray-900")}
                             >
                                 Art
                             </Link>
                             <Link
                                 href="/gallery?category=crochet"
-                                className="text-xs uppercase tracking-[0.2em] font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                                className={cn("text-xs uppercase tracking-[0.2em] font-medium transition-colors", isTransparent ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-gray-900")}
                             >
                                 Crochet
                             </Link>
@@ -118,7 +125,10 @@ export default function Navbar() {
                                         ref={searchInputRef}
                                         type="text"
                                         placeholder="Search..."
-                                        className="w-full bg-transparent border-b border-stone-300 py-1 text-sm focus:outline-none focus:border-stone-900 font-sans"
+                                        className={cn(
+                                            "w-full bg-transparent border-b py-1 text-sm focus:outline-none font-sans",
+                                            isTransparent ? "border-gray-500 text-white placeholder-gray-400 focus:border-white" : "border-stone-300 text-gray-900 focus:border-stone-900"
+                                        )}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onBlur={() => !searchQuery && setShowSearch(false)}
@@ -128,7 +138,7 @@ export default function Navbar() {
 
                             <button
                                 onClick={() => setShowSearch(!showSearch)}
-                                className={cn("text-gray-900 hover:text-gray-600 transition-colors", showSearch && "opacity-0 pointer-events-none")}
+                                className={cn("transition-colors", textColorClass, showSearch && "opacity-0 pointer-events-none")}
                             >
                                 <Search size={20} strokeWidth={1.5} />
                             </button>
@@ -138,7 +148,7 @@ export default function Navbar() {
                                 {loading ? (
                                     <div className="w-5 h-5 bg-stone-100 rounded-full animate-pulse" />
                                 ) : user ? (
-                                    <Link href="/profile" className="block w-8 h-8 rounded-full overflow-hidden border border-stone-200 hover:border-stone-900 transition-colors">
+                                    <Link href="/profile" className={cn("block w-8 h-8 rounded-full overflow-hidden border transition-colors", isTransparent ? "border-white/50 hover:border-white" : "border-stone-200 hover:border-stone-900")}>
                                         {user.photoURL ? (
                                             <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
                                         ) : (
@@ -148,20 +158,20 @@ export default function Navbar() {
                                         )}
                                     </Link>
                                 ) : (
-                                    <Link href="/login" className="text-gray-900 hover:text-gray-600 transition-colors">
+                                    <Link href="/login" className={textColorClass}>
                                         <User size={20} strokeWidth={1.5} />
                                     </Link>
                                 )}
                             </div>
 
-                            <Link href="/cart" className="group relative flex items-center gap-2 text-gray-900">
-                                <span className="text-xs uppercase tracking-[0.2em] font-medium group-hover:text-gray-600 transition-colors">Cart</span>
+                            <Link href="/cart" className={cn("group relative flex items-center gap-2", textColorClass)}>
+                                <span className={cn("text-xs uppercase tracking-[0.2em] font-medium transition-colors", isTransparent ? "group-hover:text-gray-200" : "group-hover:text-gray-600")}>Cart</span>
                                 <div className="relative">
                                     <ShoppingBag size={18} strokeWidth={1.5} />
                                     {cart.length > 0 && (
                                         <span className="absolute -top-1 -right-1 flex h-2 w-2">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stone-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-stone-800"></span>
+                                            <span className={cn("relative inline-flex rounded-full h-2 w-2", isTransparent ? "bg-white" : "bg-stone-800")}></span>
                                         </span>
                                     )}
                                 </div>
@@ -170,15 +180,15 @@ export default function Navbar() {
 
                         {/* Mobile Right: Cart & Profile */}
                         <div className="md:hidden flex items-center gap-4 z-50">
-                            <Link href="/cart" className="relative text-gray-900">
+                            <Link href="/cart" className={cn("relative", textColorClass)}>
                                 <ShoppingBag size={20} strokeWidth={1.5} />
                                 {cart.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-stone-800 rounded-full"></span>
+                                    <span className={cn("absolute -top-1 -right-1 h-2 w-2 rounded-full", isTransparent ? "bg-white" : "bg-stone-800")}></span>
                                 )}
                             </Link>
 
                             {user ? (
-                                <Link href="/profile" className="w-6 h-6 rounded-full overflow-hidden border border-stone-200">
+                                <Link href="/profile" className={cn("w-6 h-6 rounded-full overflow-hidden border", isTransparent ? "border-white/50" : "border-stone-200")}>
                                     {user.photoURL ? (
                                         <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                                     ) : (
@@ -188,7 +198,7 @@ export default function Navbar() {
                                     )}
                                 </Link>
                             ) : (
-                                <Link href="/login" className="text-gray-900">
+                                <Link href="/login" className={textColorClass}>
                                     <User size={20} strokeWidth={1.5} />
                                 </Link>
                             )}
