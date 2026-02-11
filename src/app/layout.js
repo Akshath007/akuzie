@@ -61,6 +61,10 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   verification: {
     google: 'google-site-verification=google9cfe29dd6eccd1c1',
     yandex: 'yandex-verification=YOUR_VERIFICATION_CODE', // Placeholder
