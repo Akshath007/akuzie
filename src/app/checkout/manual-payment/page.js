@@ -140,22 +140,6 @@ function ManualPaymentContent() {
                     </div>
 
                     <div className="space-y-8">
-                        <div>
-                            <a
-                                href={upiLink}
-                                className="w-full bg-[#1c1c1c] text-white py-5 rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-[0.98] shadow-lg shadow-gray-200"
-                            >
-                                <Smartphone size={20} />
-                                Pay with UPI App
-                            </a>
-                        </div>
-
-                        <div className="flex items-center gap-4 py-2">
-                            <div className="flex-1 h-[1px] bg-gray-100"></div>
-                            <span className="text-[10px] font-bold text-gray-300 tracking-widest">OR</span>
-                            <div className="flex-1 h-[1px] bg-gray-100"></div>
-                        </div>
-
                         <div className="text-center">
                             <div className="inline-block p-4 bg-white border-2 border-gray-100 rounded-[2.5rem] shadow-sm mb-4 relative group">
                                 <img
