@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getOrders, updateOrderStatus, deleteOrder } from '@/lib/data';
+import { useAuth } from '@/context/AuthContext';
 import { formatPrice, ORDER_STATUS, cn } from '@/lib/utils';
 import { ExternalLink, Calendar, User, Package, CreditCard, Trash2, X, MapPin, CheckCircle } from 'lucide-react';
 
@@ -27,6 +28,7 @@ function formatDate(dateValue, options = {}) {
 }
 
 export default function OrdersPage() {
+    const { user } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -46,13 +48,13 @@ export default function OrdersPage() {
     const handleStatusChange = async (id, status) => {
         // Optimistic update
         setOrders(orders.map(o => o.id === id ? { ...o, paymentStatus: status } : o));
-        await updateOrderStatus(id, status);
+        await updateOrderStatus(id, status, user);
         fetchOrders(); // Refresh to confirm
     };
 
     const handleDelete = async (id) => {
         if (confirm('Are you sure you want to delete this order? This cannot be undone.')) {
-            await deleteOrder(id);
+            await deleteOrder(id, user);
             if (selectedOrder?.id === id) setSelectedOrder(null);
             fetchOrders();
         }

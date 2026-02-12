@@ -12,6 +12,23 @@ const safeToMillis = (dateValue) => {
     return isNaN(date.getTime()) ? null : date.getTime();
 };
 
+// Admin Logging
+export async function logAdminAction(adminUser, action, targetId, details = {}) {
+    if (!adminUser) return;
+    try {
+        await addDoc(collection(db, "admin_logs"), {
+            adminEmail: adminUser.email,
+            adminName: adminUser.displayName || adminUser.email,
+            action,
+            targetId,
+            details,
+            timestamp: serverTimestamp(),
+        });
+    } catch (err) {
+        console.error("Failed to log admin action:", err);
+    }
+}
+
 // Paintings and Crochet
 export async function getPaintings(category = null) {
     const paintingsCol = collection(db, "paintings");
@@ -118,25 +135,36 @@ export async function addNotifyRequest(data) {
 }
 
 // Painting Management
-export async function addPainting(data) {
+export async function addPainting(data, adminUser) {
     const docRef = await addDoc(collection(db, "paintings"), {
         ...data,
         createdAt: serverTimestamp(),
         status: PAINTING_STATUS.AVAILABLE, // Default
     });
+
+    if (adminUser) {
+        await logAdminAction(adminUser, "CREATE_PAINTING", docRef.id, { title: data.title });
+    }
+
     return docRef.id;
 }
 
-export async function deletePainting(id) {
+export async function deletePainting(id, adminUser) {
     await deleteDoc(doc(db, "paintings", id));
+    if (adminUser) {
+        await logAdminAction(adminUser, "DELETE_PAINTING", id);
+    }
 }
 
-export async function updatePainting(id, data) {
+export async function updatePainting(id, data, adminUser) {
     const docRef = doc(db, "paintings", id);
     await updateDoc(docRef, data);
+    if (adminUser) {
+        await logAdminAction(adminUser, "UPDATE_PAINTING", id, data);
+    }
 }
 
-export async function updateOrderStatus(id, status) {
+export async function updateOrderStatus(id, status, adminUser) {
     const orderRef = doc(db, "orders", id);
     const orderSnap = await getDoc(orderRef);
 
@@ -146,6 +174,10 @@ export async function updateOrderStatus(id, status) {
 
     // Update Order Status
     await updateDoc(orderRef, { paymentStatus: status });
+
+    if (adminUser) {
+        await logAdminAction(adminUser, "UPDATE_ORDER_STATUS", id, { status });
+    }
 
     // Handle Normal Items (Mark as Sold)
     if (status === ORDER_STATUS.PAID && !orderData.type) {
@@ -159,8 +191,11 @@ export async function updateOrderStatus(id, status) {
     }
 }
 
-export async function deleteOrder(id) {
+export async function deleteOrder(id, adminUser) {
     await deleteDoc(doc(db, "orders", id));
+    if (adminUser) {
+        await logAdminAction(adminUser, "DELETE_ORDER", id);
+    }
 }
 
 export async function getUserOrders(email) {

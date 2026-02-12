@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { getPaintings, deletePainting, updatePainting } from '@/lib/data';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { Trash2, Edit, TrendingUp, ImageIcon, Plus, Package, ShoppingBag, Users } from 'lucide-react';
+import { Trash2, Edit, TrendingUp, ImageIcon, Plus, Package, ShoppingBag, Users, ClipboardList } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
+    const { user } = useAuth();
     const [paintings, setPaintings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, painting, crochet
@@ -25,7 +27,7 @@ export default function DashboardPage() {
 
     const handleDelete = async (id) => {
         if (confirm("Delete this masterpiece?")) {
-            await deletePainting(id);
+            await deletePainting(id, user);
             fetchPaintings();
         }
     };
@@ -34,7 +36,7 @@ export default function DashboardPage() {
         const newStatus = painting.status === PAINTING_STATUS.AVAILABLE
             ? PAINTING_STATUS.SOLD
             : PAINTING_STATUS.AVAILABLE;
-        await updatePainting(painting.id, { status: newStatus });
+        await updatePainting(painting.id, { status: newStatus }, user);
         fetchPaintings();
     };
 
@@ -67,6 +69,10 @@ export default function DashboardPage() {
                     <p className="text-gray-500">Manage your gallery and orders.</p>
                 </div>
                 <div className="flex bg-white p-1.5 rounded-full border border-gray-100 shadow-sm gap-1 overflow-x-auto">
+                    <Link href="/akshath/logs" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
+                        <ClipboardList size={16} />
+                        Activity Logs
+                    </Link>
                     <Link href="/akshath/orders" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
                         <ShoppingBag size={16} />
                         Orders

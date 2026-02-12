@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addPainting } from '@/lib/data';
+import { useAuth } from '@/context/AuthContext';
 import { Loader2, ArrowLeft, Plus, X, Image as ImageIcon } from 'lucide-react';
 import Input from '@/components/Input';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export default function AddPaintingPage() {
+    const { user } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [imageInputs, setImageInputs] = useState(['']); // Array of URL strings
@@ -75,7 +77,7 @@ export default function AddPaintingPage() {
                 ...formData,
                 price: Number(formData.price),
                 images: validImages, // Send array of images
-            });
+            }, user);
             router.push('/akshath/dashboard');
         } catch (error) {
             console.error(error);

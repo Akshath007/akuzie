@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPainting, updatePainting } from '@/lib/data';
+import { useAuth } from '@/context/AuthContext';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Input from '@/components/Input';
 
 export default function EditPaintingPage({ params }) {
+    const { user } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -59,7 +61,7 @@ export default function EditPaintingPage({ params }) {
                 ...formData,
                 price: Number(formData.price),
                 images: [finalImageUrl],
-            });
+            }, user);
             router.push('/akshath/dashboard');
         } catch (error) {
             console.error(error);

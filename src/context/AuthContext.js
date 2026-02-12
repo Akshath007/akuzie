@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
         return signOut(auth);
     };
 
-    const isAdmin = user?.email === 'akshatjshetty@gmail.com' || user?.email === 'akshat007@gmail.com'; // Adjust based on your actual admin email
+    const isAdmin = user?.email === 'akshathhp123@gmail.com' || user?.email === 'akuzie27@gmail.com';
 
     return (
         <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout, isAdmin }}>

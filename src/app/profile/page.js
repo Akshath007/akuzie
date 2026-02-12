@@ -96,10 +96,10 @@ function ProfileContent() {
                 ) : orders.length > 0 ? (
                     <div className="bg-white border border-stone-100 rounded-lg divide-y divide-stone-100">
                         {orders.map((order) => (
-                            <div key={order.id} className="p-6 hover:bg-stone-50 transition-colors">
+                            <Link key={order.id} href={`/orders/${order.id}`} className="block p-6 hover:bg-stone-50 transition-colors group">
                                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
                                     <div>
-                                        <p className="text-sm text-gray-500 mb-1">
+                                        <p className="text-sm text-gray-500 mb-1 group-hover:text-gray-900 transition-colors">
                                             Order #{order.id.slice(0, 8).toUpperCase()} • {new Date(order.createdAt).toLocaleDateString()}
                                         </p>
                                         <div className="flex gap-2">
@@ -129,7 +129,7 @@ function ProfileContent() {
                                         )) : null;
                                     })()}
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 ) : (

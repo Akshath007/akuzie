@@ -99,15 +99,23 @@ function ManualPaymentContent() {
                         <CheckCircle2 size={40} className="text-green-500" />
                     </div>
                     <h2 className="text-2xl font-serif text-gray-900 mb-4">Payment Uploaded</h2>
-                    <p className="text-gray-500 mb-8 leading-relaxed">
-                        Payment under verification. Order will be confirmed soon.
+                    <p className="text-gray-500 mb-8 leading-relaxed text-sm">
+                        Verification is in progress. You can track the status in your profile or at the link below.
                     </p>
-                    <button
-                        onClick={() => router.push('/')}
-                        className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-[0.98]"
-                    >
-                        Back to Gallery
-                    </button>
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => router.push(`/orders/${orderId}`)}
+                            className="w-full bg-violet-600 text-white py-4 rounded-2xl font-bold uppercase tracking-widest hover:bg-violet-700 transition-all shadow-lg shadow-violet-100"
+                        >
+                            View Order Details
+                        </button>
+                        <button
+                            onClick={() => router.push('/')}
+                            className="w-full bg-white text-gray-400 py-3 rounded-2xl font-bold uppercase tracking-widest hover:text-gray-900 transition-all text-[10px]"
+                        >
+                            Back to Gallery
+                        </button>
+                    </div>
                 </div>
             </div>
         );

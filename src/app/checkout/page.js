@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import { processOrder, getPainting } from '@/lib/data';
+import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
 import { Loader2, QrCode } from 'lucide-react';
 import Link from 'next/link';
@@ -11,18 +12,27 @@ import { load } from '@cashfreepayments/cashfree-js';
 
 export default function CheckoutPage() {
     const { cart, clearCart } = useCart();
-    const router = useRouter();
-
+    const { user } = useAuth();
     const [step, setStep] = useState(1); // 1: Details, 2: Payment
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
+        name: user?.displayName || '',
+        email: user?.email || '',
         phone: '',
         address: '',
         city: '',
         postalCode: '',
     });
+
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                name: prev.name || user.displayName || '',
+                email: prev.email || user.email || '',
+            }));
+        }
+    }, [user]);
 
     const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 
