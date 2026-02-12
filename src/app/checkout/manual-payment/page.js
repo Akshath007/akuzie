@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
-import { Upload, CheckCircle2, QrCode, Smartphone, ArrowLeft, Loader2 } from 'lucide-react';
+import { Upload, CheckCircle2, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -55,7 +55,7 @@ function ManualPaymentContent() {
         setIsSubmitting(true);
 
         try {
-            // 1. Upload to Google Drive via our API
+            // 1. Upload to Cloudinary via our API route
             const formData = new FormData();
             formData.append('file', file);
             formData.append('orderId', orderId);
@@ -67,15 +67,12 @@ function ManualPaymentContent() {
 
             const uploadData = await uploadRes.json();
 
-            if (!uploadRes.ok) {
-                throw new Error(uploadData.details || uploadData.error || 'Upload failed');
-            }
+            if (!uploadRes.ok) throw new Error(uploadData.details || uploadData.error || 'Upload failed');
 
             // 2. Update Firestore Order
             const orderRef = doc(db, "orders", orderId);
             await updateDoc(orderRef, {
-                paymentScreenshot: uploadData.url, // Google Drive original link
-                paymentScreenshotDirect: uploadData.directUrl, // High-res direct link
+                paymentScreenshot: uploadData.url,
                 paymentStatus: 'pending',
                 paymentUploadedAt: serverTimestamp(),
             });

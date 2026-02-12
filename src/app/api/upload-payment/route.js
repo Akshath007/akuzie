@@ -1,21 +1,11 @@
-import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
-import { Readable } from 'stream';
+import { v2 as cloudinary } from 'cloudinary';
 
-// Google Drive Shared Folder ID
-const FOLDER_ID = '1SZSTLb9U_OM-VhpeZly-nzfne3WUNNwK';
-
-const auth = new google.auth.GoogleAuth({
-    credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.includes('\\n')
-            ? process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n')
-            : process.env.GOOGLE_DRIVE_PRIVATE_KEY,
-    },
-    scopes: ['https://www.googleapis.com/auth/drive.file'],
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-const drive = google.drive({ version: 'v3', auth });
 
 export async function POST(req) {
     try {
@@ -27,50 +17,35 @@ export async function POST(req) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        const fileMetadata = {
-            name: `Payment_${orderId}_${Date.now()}.jpg`,
-            parents: [FOLDER_ID],
-        };
-
-        const media = {
-            mimeType: file.type,
-            body: Readable.from(buffer),
-        };
-
-        const response = await drive.files.create({
-            resource: fileMetadata,
-            media: media,
-            fields: 'id, webViewLink, webContentLink',
+        // Upload to Cloudinary using a promise to handle the stream
+        const uploadResult = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream(
+                {
+                    folder: 'akuzie_payments',
+                    public_id: `payment_${orderId}_${Date.now()}`,
+                    resource_type: 'auto',
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            ).end(buffer);
         });
-
-        const fileId = response.data.id;
-
-        // Make file readable by anyone with the link
-        await drive.permissions.create({
-            fileId: fileId,
-            requestBody: {
-                role: 'reader',
-                type: 'anyone',
-            },
-        });
-
-        // Construct a direct viewing URL
-        const viewUrl = `https://lh3.googleusercontent.com/u/0/d/${fileId}`;
 
         return NextResponse.json({
             success: true,
-            fileId: fileId,
-            url: response.data.webViewLink,
-            directUrl: viewUrl
+            url: uploadResult.secure_url,
+            publicId: uploadResult.public_id,
         });
 
     } catch (error) {
-        console.error('SERVER_ERROR_DRIVE_UPLOAD:', error);
+        console.error('CLOUDINARY_UPLOAD_ERROR:', error);
         return NextResponse.json({
             error: 'Upload failed',
-            details: error.response?.data?.error?.message || error.message || 'Unknown error'
+            details: error.message
         }, { status: 500 });
     }
 }
