@@ -15,84 +15,87 @@ export default function NewAuctionPage() {
         startingPrice: '',
         minBidIncrement: '',
         endTime: '',
-        const getDirectLink = (url) => {
-            if (!url) return '';
-            try {
-                let id = '';
-                // Parse Google Drive Links
-                if (url.includes('/file/d/')) {
-                    id = url.split('/file/d/')[1].split('/')[0];
-                } else if (url.includes('id=')) {
-                    id = url.split('id=')[1].split('&')[0];
-                }
-                if (id) return `https://lh3.googleusercontent.com/d/${id}`;
-            } catch (e) { console.error("Error converting drive link", e); }
-            return url;
-        };
+        images: [''] // Array of image URLs
+    });
 
-        const handleInputChange = (e) => {
-            const { name, value } = e.target;
-            setFormData(prev => ({ ...prev, [name]: value }));
-        };
-
-        const handleImageChange = (index, value) => {
-            // Auto-convert link immediately on input
-            const directLink = getDirectLink(value);
-
-            const newImages = [...formData.images];
-            newImages[index] = directLink;
-            setFormData(prev => ({ ...prev, images: newImages }));
-        };
-
-        const addImageField = () => {
-            setFormData(prev => ({ ...prev, images: [...prev.images, ''] }));
-        };
-
-        const removeImageField = (index) => {
-            const newImages = formData.images.filter((_, i) => i !== index);
-            setFormData(prev => ({ ...prev, images: newImages }));
-        };
-
-        const handleSubmit = async (e) => {
-            e.preventDefault();
-            setLoading(true);
-
-            try {
-                // Validate
-                if (!formData.title || !formData.startingPrice || !formData.endTime) {
-                    throw new Error("Please fill in all required fields.");
-                }
-
-                // Convert End Time to Date object
-                const endDate = new Date(formData.endTime);
-                if (endDate <= new Date()) {
-                    throw new Error("End time must be in the future.");
-                }
-
-                const cleanImages = formData.images.filter(url => url.trim() !== '');
-
-                await createAuction({
-                    title: formData.title,
-                    description: formData.description,
-                    startingPrice: Number(formData.startingPrice),
-                    minBidIncrement: Number(formData.minBidIncrement) || 50,
-                    endTime: endDate,
-                    startTime: new Date(), // Start immediately
-                    images: cleanImages,
-                    status: 'active'
-                });
-
-                alert("Auction created successfully!");
-                router.push('/akshath/auctions');
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                setLoading(false);
+    const getDirectLink = (url) => {
+        if (!url) return '';
+        try {
+            let id = '';
+            // Parse Google Drive Links
+            if (url.includes('/file/d/')) {
+                id = url.split('/file/d/')[1].split('/')[0];
+            } else if (url.includes('id=')) {
+                id = url.split('id=')[1].split('&')[0];
             }
-        };
+            if (id) return `https://lh3.googleusercontent.com/d/${id}`;
+        } catch (e) { console.error("Error converting drive link", e); }
+        return url;
+    };
 
-        return(
-        <div className = "p-6 md:p-8 max-w-4xl mx-auto" >
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleImageChange = (index, value) => {
+        // Auto-convert link immediately on input
+        const directLink = getDirectLink(value);
+
+        const newImages = [...formData.images];
+        newImages[index] = directLink;
+        setFormData(prev => ({ ...prev, images: newImages }));
+    };
+
+    const addImageField = () => {
+        setFormData(prev => ({ ...prev, images: [...prev.images, ''] }));
+    };
+
+    const removeImageField = (index) => {
+        const newImages = formData.images.filter((_, i) => i !== index);
+        setFormData(prev => ({ ...prev, images: newImages }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            // Validate
+            if (!formData.title || !formData.startingPrice || !formData.endTime) {
+                throw new Error("Please fill in all required fields.");
+            }
+
+            // Convert End Time to Date object
+            const endDate = new Date(formData.endTime);
+            if (endDate <= new Date()) {
+                throw new Error("End time must be in the future.");
+            }
+
+            const cleanImages = formData.images.filter(url => url.trim() !== '');
+
+            await createAuction({
+                title: formData.title,
+                description: formData.description,
+                startingPrice: Number(formData.startingPrice),
+                minBidIncrement: Number(formData.minBidIncrement) || 50,
+                endTime: endDate,
+                startTime: new Date(), // Start immediately
+                images: cleanImages,
+                status: 'active'
+            });
+
+            alert("Auction created successfully!");
+            router.push('/akshath/auctions');
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="p-6 md:p-8 max-w-4xl mx-auto">
             <Link href="/akshath/auctions" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-8 transition-colors">
                 <ArrowLeft size={18} /> Back to Auctions
             </Link>
@@ -209,6 +212,6 @@ export default function NewAuctionPage() {
                 </div>
 
             </form>
-        </div >
+        </div>
     );
 }
