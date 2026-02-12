@@ -3,6 +3,7 @@ import {
     collection,
     addDoc,
     updateDoc,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -11,6 +12,7 @@ import {
     orderBy,
     serverTimestamp,
     runTransaction,
+    writeBatch,
     Timestamp
 } from "firebase/firestore";
 
@@ -21,8 +23,18 @@ const bidsRef = collection(db, "bids");
 // --- HELPER: Create Auction ---
 export async function createAuction(data) {
     try {
+        // Ensure dates are stored as Firestore Timestamps for proper querying
+        const endTime = data.endTime instanceof Date
+            ? Timestamp.fromDate(data.endTime)
+            : data.endTime;
+        const startTime = data.startTime instanceof Date
+            ? Timestamp.fromDate(data.startTime)
+            : data.startTime;
+
         const docRef = await addDoc(auctionsRef, {
             ...data,
+            endTime,
+            startTime,
             currentHighestBid: data.startingPrice || 0,
             highestBidderId: null,
             status: 'active',
@@ -105,9 +117,33 @@ export async function placeBid(auctionId, userId, amount) {
 
 // --- HELPER: Get active auctions ---
 export async function getActiveAuctions() {
-    const q = query(auctionsRef, where("status", "==", "active"), orderBy("endTime", "asc"));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+        // This composite query requires a Firestore index on status + endTime
+        const q = query(auctionsRef, where("status", "==", "active"), orderBy("endTime", "asc"));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Composite query failed (you may need to create a Firestore index):", error);
+        // If the error message contains an index creation URL, log it prominently
+        if (error.message && error.message.includes('https://')) {
+            const urlMatch = error.message.match(/(https:\/\/console\.firebase\.google\.com[^\s]+)/);
+            if (urlMatch) {
+                console.error("\n🔗 CREATE THE REQUIRED INDEX HERE:\n" + urlMatch[1] + "\n");
+            }
+        }
+        // Fallback: query without orderBy so auctions at least appear
+        console.warn("Falling back to simple status query without ordering...");
+        const fallbackQ = query(auctionsRef, where("status", "==", "active"));
+        const fallbackSnapshot = await getDocs(fallbackQ);
+        const results = fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort client-side as fallback
+        results.sort((a, b) => {
+            const aEnd = a.endTime?.toMillis ? a.endTime.toMillis() : (a.endTime instanceof Date ? a.endTime.getTime() : 0);
+            const bEnd = b.endTime?.toMillis ? b.endTime.toMillis() : (b.endTime instanceof Date ? b.endTime.getTime() : 0);
+            return aEnd - bEnd;
+        });
+        return results;
+    }
 }
 
 // --- HELPER: Get auction by ID ---
@@ -138,4 +174,29 @@ export async function getBids(auctionId) {
         ...doc.data(),
         timestamp: doc.data().timestamp?.toMillis()
     }));
+}
+
+// --- HELPER: Delete Auction and its Bids ---
+export async function deleteAuction(auctionId) {
+    try {
+        // 1. Delete all bids associated with the auction
+        const bidsQuery = query(bidsRef, where("auctionId", "==", auctionId));
+        const bidsSnapshot = await getDocs(bidsQuery);
+
+        if (!bidsSnapshot.empty) {
+            const batch = writeBatch(db);
+            bidsSnapshot.docs.forEach((bidDoc) => {
+                batch.delete(bidDoc.ref);
+            });
+            await batch.commit();
+        }
+
+        // 2. Delete the auction document itself
+        await deleteDoc(doc(db, "auctions", auctionId));
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting auction: ", error);
+        throw error;
+    }
 }

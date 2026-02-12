@@ -10,18 +10,24 @@ import { Loader2, Timer, Gavel } from 'lucide-react';
 export default function AuctionsListPage() {
     const [auctions, setAuctions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const fetchAuctions = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getActiveAuctions();
+            console.log("Fetched auctions:", data.length, data);
+            setAuctions(data);
+        } catch (err) {
+            console.error("Failed to load auctions", err);
+            setError(err.message || "Failed to load auctions");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        async function fetchAuctions() {
-            try {
-                const data = await getActiveAuctions();
-                setAuctions(data);
-            } catch (err) {
-                console.error("Failed to load auctions", err);
-            } finally {
-                setLoading(false);
-            }
-        }
         fetchAuctions();
     }, []);
 
@@ -29,6 +35,22 @@ export default function AuctionsListPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="pt-32 pb-20 bg-[#fafafa] min-h-screen">
+                <div className="max-w-7xl mx-auto px-6 text-center">
+                    <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-4">Live Auctions</h1>
+                    <div className="py-20 bg-white rounded-3xl border border-dashed border-red-200">
+                        <p className="text-red-500 mb-4">Error: {error}</p>
+                        <button onClick={fetchAuctions} className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors">
+                            Retry
+                        </button>
+                    </div>
+                </div>
             </div>
         );
     }

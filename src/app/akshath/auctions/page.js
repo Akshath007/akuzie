@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { deleteAuction } from '@/lib/auction-data';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Gavel, Timer, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Plus, Gavel, Timer, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 export default function AuctionsPage() {
     const [auctions, setAuctions] = useState([]);
@@ -36,6 +37,15 @@ export default function AuctionsPage() {
             });
         } catch (error) {
             alert("Error ending auction: " + error.message);
+        }
+    };
+
+    const handleDeleteAuction = async (id, title) => {
+        if (!confirm(`Are you sure you want to permanently delete "${title}"? This will also delete all associated bids. This action cannot be undone.`)) return;
+        try {
+            await deleteAuction(id);
+        } catch (error) {
+            alert("Error deleting auction: " + error.message);
         }
     };
 
@@ -75,8 +85,8 @@ export default function AuctionsPage() {
                                     <h3 className="font-serif text-lg text-gray-900">{auction.title}</h3>
                                     <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${auction.status === 'active' && !isEnded ? 'bg-green-100 text-green-700' :
-                                                auction.status === 'sold' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-gray-100 text-gray-600'
+                                            auction.status === 'sold' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-gray-100 text-gray-600'
                                             }`}>
                                             {isEnded && auction.status === 'active' ? 'Ended' : auction.status}
                                         </span>
@@ -114,7 +124,7 @@ export default function AuctionsPage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
                                 {auction.status === 'active' && !isEnded && (
                                     <button
                                         onClick={() => handleEndAuction(auction.id)}
@@ -128,6 +138,13 @@ export default function AuctionsPage() {
                                         <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">Awaiting Payment</span>
                                     </div>
                                 )}
+                                <button
+                                    onClick={() => handleDeleteAuction(auction.id, auction.title)}
+                                    className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                    title="Delete auction"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         </div>
                     );
