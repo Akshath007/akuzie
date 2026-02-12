@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getOrders, updateOrderStatus, deleteOrder } from '@/lib/data';
 import { formatPrice, ORDER_STATUS, cn } from '@/lib/utils';
-import { ExternalLink, Calendar, User, Package, CreditCard, Trash2, X, MapPin } from 'lucide-react';
+import { ExternalLink, Calendar, User, Package, CreditCard, Trash2, X, MapPin, CheckCircle } from 'lucide-react';
 
 // Safe date formatter — handles Firestore Timestamp, ISO string, Date object, or missing
 function formatDate(dateValue, options = {}) {
@@ -221,6 +221,71 @@ export default function OrdersPage() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Payment Verification Section */}
+                        {selectedOrder.paymentScreenshot && (
+                            <div className="mb-8 p-6 bg-violet-50 rounded-2xl border border-violet-100">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-violet-600 mb-4 flex items-center gap-2">
+                                    <CreditCard size={14} /> Payment Verification
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                    <div className="relative group aspect-[3/4] md:aspect-square bg-white rounded-xl overflow-hidden border border-violet-200 shadow-sm cursor-zoom-in" onClick={() => window.open(selectedOrder.paymentScreenshot, '_blank')}>
+                                        <img
+                                            src={selectedOrder.paymentScreenshotDirect || selectedOrder.paymentScreenshot}
+                                            alt="Payment Screenshot"
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">
+                                            Open Full View
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <p className="text-sm text-gray-600">
+                                            This customer uploaded a payment proof via <strong>Manual UPI</strong>.
+                                            Please verify the amount in your bank statement before approving.
+                                        </p>
+
+                                        <div className="flex flex-col gap-2">
+                                            {selectedOrder.paymentStatus !== 'paid' && (
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm("Confirm payment? This will mark the order as PAID and items as SOLD.")) {
+                                                            handleStatusChange(selectedOrder.id, 'paid');
+                                                            setSelectedOrder({ ...selectedOrder, paymentStatus: 'paid' });
+                                                        }
+                                                    }}
+                                                    className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 flex items-center justify-center gap-2"
+                                                >
+                                                    <CheckCircle size={16} /> Approve Payment
+                                                </button>
+                                            )}
+
+                                            {selectedOrder.paymentStatus !== 'rejected' && selectedOrder.paymentStatus !== 'paid' && (
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm("Reject this payment proof? User will need to re-upload.")) {
+                                                            handleStatusChange(selectedOrder.id, 'rejected');
+                                                            setSelectedOrder({ ...selectedOrder, paymentStatus: 'rejected' });
+                                                        }
+                                                    }}
+                                                    className="w-full py-3 bg-white text-red-600 border border-red-100 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <X size={16} /> Reject Payment
+                                                </button>
+                                            )}
+
+                                            {selectedOrder.paymentStatus === 'paid' && (
+                                                <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm bg-white p-4 rounded-xl border border-emerald-100">
+                                                    <CheckCircle size={18} /> Payment Confirmed
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                             <div className="flex items-center gap-2 text-gray-500">

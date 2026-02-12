@@ -5,7 +5,8 @@ import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import { processOrder } from '@/lib/data';
 import { formatPrice } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, QrCode } from 'lucide-react';
+import Link from 'next/link';
 import { load } from '@cashfreepayments/cashfree-js';
 
 export default function CheckoutPage() {
@@ -229,21 +230,59 @@ export default function CheckoutPage() {
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => setStep(1)}
-                            disabled={loading}
-                            className="flex-1 bg-white text-gray-900 border border-gray-200 py-4 text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-50"
-                        >
-                            Back
-                        </button>
+                    <div className="flex flex-col gap-4">
                         <button
                             onClick={handlePaymentComplete}
                             disabled={loading}
-                            className="flex-1 bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                            className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                         >
                             {loading && <Loader2 size={16} className="animate-spin" />}
-                            {loading ? 'Processing...' : 'Pay Now'}
+                            {loading ? 'Processing...' : 'Pay with Cards / Netbanking'}
+                        </button>
+
+                        <div className="flex items-center gap-4 py-2">
+                            <div className="flex-1 h-[1px] bg-gray-100"></div>
+                            <span className="text-[10px] font-bold text-gray-300 tracking-widest uppercase">Alternative</span>
+                            <div className="flex-1 h-[1px] bg-gray-100"></div>
+                        </div>
+
+                        <button
+                            onClick={async () => {
+                                setLoading(true);
+                                try {
+                                    const orderData = {
+                                        customerName: formData.name,
+                                        customerEmail: formData.email,
+                                        phone: formData.phone,
+                                        address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
+                                        pincode: formData.postalCode,
+                                        items: cart.map(item => ({ id: item.id, title: item.title, price: item.price, images: item.images || [], medium: item.medium || '' })),
+                                        totalAmount: total,
+                                        paymentStatus: 'pending',
+                                        method: 'manual_upi'
+                                    };
+                                    const paintingIds = cart.map(item => item.id);
+                                    const orderId = await processOrder(orderData, paintingIds);
+                                    router.push(`/checkout/manual-payment?orderId=${orderId}`);
+                                } catch (err) {
+                                    alert("Error creating order: " + err.message);
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                            disabled={loading}
+                            className="w-full bg-white text-violet-600 border border-violet-100 py-4 text-sm uppercase tracking-widest hover:bg-violet-50 transition-all flex items-center justify-center gap-2 font-bold shadow-sm shadow-violet-100 disabled:opacity-50"
+                        >
+                            <QrCode size={18} />
+                            {loading ? 'Processing...' : 'Scan & Pay (UPI QR)'}
+                        </button>
+
+                        <button
+                            onClick={() => setStep(1)}
+                            disabled={loading}
+                            className="w-full bg-transparent text-gray-400 py-2 text-[10px] uppercase tracking-widest hover:text-gray-600 transition-colors disabled:opacity-50"
+                        >
+                            Back to Shipping Details
                         </button>
                     </div>
                 </div>

@@ -12,6 +12,7 @@
     "@cashfreepayments/cashfree-js": "^1.0.6",
     "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@next/third-parties": "^16.1.6",
+    "googleapis": "^144.0.0",
     "clsx": "^2.1.1",
     "firebase": "^12.8.0",
     "framer-motion": "^12.31.0",
