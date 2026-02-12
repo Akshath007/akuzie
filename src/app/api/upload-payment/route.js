@@ -8,7 +8,9 @@ const FOLDER_NAME = 'Akuzie Payments';
 const auth = new google.auth.GoogleAuth({
     credentials: {
         client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY?.includes('\\n')
+            ? process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            : process.env.GOOGLE_DRIVE_PRIVATE_KEY,
     },
     scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
@@ -90,7 +92,10 @@ export async function POST(req) {
         });
 
     } catch (error) {
-        console.error('Google Drive Upload Error:', error);
-        return NextResponse.json({ error: 'Upload failed', details: error.message }, { status: 500 });
+        console.error('SERVER_ERROR_DRIVE_UPLOAD:', error);
+        return NextResponse.json({
+            error: 'Upload failed',
+            details: error.response?.data?.error?.message || error.message || 'Unknown error'
+        }, { status: 500 });
     }
 }

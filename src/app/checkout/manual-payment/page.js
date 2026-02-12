@@ -67,7 +67,9 @@ function ManualPaymentContent() {
 
             const uploadData = await uploadRes.json();
 
-            if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
+            if (!uploadRes.ok) {
+                throw new Error(uploadData.details || uploadData.error || 'Upload failed');
+            }
 
             // 2. Update Firestore Order
             const orderRef = doc(db, "orders", orderId);
