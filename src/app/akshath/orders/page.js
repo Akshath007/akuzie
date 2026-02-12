@@ -5,6 +5,27 @@ import { getOrders, updateOrderStatus, deleteOrder } from '@/lib/data';
 import { formatPrice, ORDER_STATUS, cn } from '@/lib/utils';
 import { ExternalLink, Calendar, User, Package, CreditCard, Trash2, X, MapPin } from 'lucide-react';
 
+// Safe date formatter — handles Firestore Timestamp, ISO string, Date object, or missing
+function formatDate(dateValue, options = {}) {
+    if (!dateValue) return 'N/A';
+    let date;
+    if (dateValue?.seconds) {
+        // Firestore Timestamp
+        date = new Date(dateValue.seconds * 1000);
+    } else if (dateValue?.toDate) {
+        // Firestore Timestamp object with toDate method
+        date = dateValue.toDate();
+    } else if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+        date = new Date(dateValue);
+    } else if (dateValue instanceof Date) {
+        date = dateValue;
+    } else {
+        return 'N/A';
+    }
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', ...options });
+}
+
 export default function OrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -73,7 +94,7 @@ export default function OrdersPage() {
                                     <td className="py-4 text-gray-600">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={14} className="text-gray-400" />
-                                            {new Date(order.createdAt?.seconds * 1000).toLocaleDateString()}
+                                            {formatDate(order.createdAt)}
                                         </div>
                                     </td>
                                     <td className="py-4">
@@ -204,7 +225,7 @@ export default function OrdersPage() {
                         <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                             <div className="flex items-center gap-2 text-gray-500">
                                 <Calendar size={16} />
-                                <span className="text-sm">Placed on {new Date(selectedOrder.createdAt?.seconds * 1000).toLocaleString()}</span>
+                                <span className="text-sm">Placed on {formatDate(selectedOrder.createdAt, { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                             <div className="text-right">
                                 <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Total Amount</p>
