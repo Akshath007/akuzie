@@ -6,52 +6,41 @@ import { ORDER_STATUS } from '@/lib/utils';
 export async function POST(request) {
     try {
         const rawBody = await request.text();
-        const signature = request.headers.get('x-signature');
-        const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+        const signature = request.headers.get('x-webhook-signature');
+        const timestamp = request.headers.get('x-webhook-timestamp');
+
+        // Use Cashfree verification or manual
+        // Manual verification recommended to ensure correctness with rawBody
+        const secret = process.env.CASHFREE_SECRET_KEY;
 
         if (!secret) {
-            console.error('LEMONSQUEEZY_WEBHOOK_SECRET is not configured');
+            console.error('CASHFREE_SECRET_KEY is not configured');
             return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
         }
 
-        // Verify webhook signature
-        const hmac = crypto.createHmac('sha256', secret);
-        const digest = hmac.update(rawBody).digest('hex');
+        if (!signature || !timestamp) {
+            return NextResponse.json({ error: 'Missing signature headers' }, { status: 401 });
+        }
 
-        if (signature !== digest) {
+        // Verify signature: timestamp + body
+        const data = timestamp + rawBody;
+        const hmac = crypto.createHmac('sha256', secret);
+        const computedSignature = hmac.update(data).digest('base64');
+
+        if (signature !== computedSignature) {
             console.error('Invalid webhook signature');
             return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
         }
 
         const payload = JSON.parse(rawBody);
-        const eventName = payload.meta?.event_name;
+        const eventType = payload.type;
 
-        console.log('Webhook received:', eventName);
+        console.log('Webhook received:', eventType);
 
-        // Handle different webhook events
-        switch (eventName) {
-            case 'order_created':
-                await handleOrderCreated(payload);
-                break;
-
-            case 'order_refunded':
-                await handleOrderRefunded(payload);
-                break;
-
-            case 'subscription_created':
-                await handleSubscriptionCreated(payload);
-                break;
-
-            case 'subscription_updated':
-                await handleSubscriptionUpdated(payload);
-                break;
-
-            case 'subscription_cancelled':
-                await handleSubscriptionCancelled(payload);
-                break;
-
-            default:
-                console.log('Unhandled event:', eventName);
+        if (eventType === 'PAYMENT_SUCCESS_WEBHOOK') {
+            await handlePaymentSuccess(payload);
+        } else if (eventType === 'PAYMENT_FAILED_WEBHOOK') {
+            await handlePaymentFailed(payload);
         }
 
         return NextResponse.json({ received: true });
@@ -64,43 +53,34 @@ export async function POST(request) {
     }
 }
 
-async function handleOrderCreated(payload) {
-    const orderData = payload.data.attributes;
-    const customData = orderData.first_order_item?.product_name;
+async function handlePaymentSuccess(payload) {
+    const payment = payload.data.payment;
+    const order = payload.data.order;
 
-    console.log('Order created:', {
-        orderId: payload.data.id,
-        customerEmail: orderData.user_email,
-        total: orderData.total_formatted,
-        status: orderData.status,
-    });
+    console.log('Payment successful for order:', order.order_id);
 
-    // Update order status in your database
-    // You can extract the order ID from custom data if you passed it during checkout
-    if (orderData.status === 'paid') {
+    // Extract order ID. We store it as just the ID typically, but payload might be complex.
+    // Ensure order_id matches what we sent (which is the document ID).
+
+    // Check status
+    if (payment.payment_status === 'SUCCESS') {
+        const orderId = order.order_id;
+
         // Mark order as paid in your Firebase database
-        // await updateOrderStatus(yourOrderId, ORDER_STATUS.PAID);
+        // Use the imported updateOrderStatus function
+        try {
+            // Example: orderId is already the Firestore doc ID based on our checkout logic
+            await updateOrderStatus(orderId, ORDER_STATUS.PAID);
+            console.log(`Order ${orderId} updated to PAID`);
+        } catch (e) {
+            console.error(`Failed to update order ${orderId}:`, e);
+        }
     }
 }
 
-async function handleOrderRefunded(payload) {
-    const orderData = payload.data.attributes;
-    console.log('Order refunded:', payload.data.id);
-
-    // Handle refund logic - update order status, restore painting availability, etc.
-}
-
-async function handleSubscriptionCreated(payload) {
-    console.log('Subscription created:', payload.data.id);
-    // Handle subscription creation if you add subscription products
-}
-
-async function handleSubscriptionUpdated(payload) {
-    console.log('Subscription updated:', payload.data.id);
-    // Handle subscription updates
-}
-
-async function handleSubscriptionCancelled(payload) {
-    console.log('Subscription cancelled:', payload.data.id);
-    // Handle subscription cancellation
+async function handlePaymentFailed(payload) {
+    console.log('Payment failed:', payload.data.order.order_id);
+    // You might want to log this or notify user if possible, 
+    // but typically user is still on the checkout page seeing failure.
+    // Webhook is for async updates.
 }

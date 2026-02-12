@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { processOrder } from '@/lib/data';
 import { formatPrice } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { load } from '@cashfreepayments/cashfree-js';
 
 export default function CheckoutPage() {
     const { cart, clearCart } = useCart();
@@ -53,7 +54,7 @@ export default function CheckoutPage() {
             const paintingIds = cart.map(item => item.id);
             const orderId = await processOrder(orderData, paintingIds);
 
-            // Create Lemon Squeezy checkout session
+            // Create Cashfree order via our API route
             const response = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -61,6 +62,7 @@ export default function CheckoutPage() {
                     orderId,
                     customerName: formData.name,
                     customerEmail: formData.email,
+                    customerPhone: formData.phone,
                     amount: total,
                     items: cart.map(item => ({
                         name: item.title,
@@ -72,11 +74,19 @@ export default function CheckoutPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to create checkout session');
+                throw new Error(data.error || 'Failed to create payment session');
             }
 
-            // Redirect to Lemon Squeezy checkout
-            window.location.href = data.checkoutUrl;
+            // Load Cashfree JS SDK and launch checkout
+            const cashfree = await load({
+                mode: process.env.NEXT_PUBLIC_CASHFREE_MODE || 'sandbox',
+            });
+
+            cashfree.checkout({
+                paymentSessionId: data.payment_session_id,
+                redirectTarget: '_self',
+            });
+
         } catch (error) {
             console.error("Payment initiation failed", error);
             alert(`Payment failed: ${error.message}. Please try again.`);
@@ -142,6 +152,7 @@ export default function CheckoutPage() {
                             <input
                                 name="phone"
                                 required
+                                placeholder="Required for payment"
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
                                 value={formData.phone}
                                 onChange={handleInputChange}
@@ -190,7 +201,7 @@ export default function CheckoutPage() {
                 </form>
             )}
 
-            {/* Step 2: Lemon Squeezy Payment */}
+            {/* Step 2: Cashfree Payment */}
             {step === 2 && (
                 <div className="space-y-8 fade-in">
                     <h2 className="text-2xl font-light text-gray-900">Payment</h2>
@@ -200,7 +211,7 @@ export default function CheckoutPage() {
                             <p className="text-sm text-gray-500 mb-4 uppercase tracking-wide">Order Summary</p>
                             <p className="text-3xl font-serif text-gray-900 mb-2">{formatPrice(total)}</p>
                             <p className="text-sm text-gray-500">
-                                {cart.length} {cart.length === 1 ? 'painting' : 'paintings'}
+                                {cart.length} {cart.length === 1 ? 'item' : 'items'}
                             </p>
                         </div>
 
@@ -214,7 +225,7 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="text-xs text-gray-500 text-center max-w-md mx-auto">
-                            You will be redirected to our secure payment partner, Lemon Squeezy, to complete your purchase.
+                            You will be redirected to our secure payment partner to complete your purchase.
                         </div>
                     </div>
 
@@ -232,7 +243,7 @@ export default function CheckoutPage() {
                             className="flex-1 bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                         >
                             {loading && <Loader2 size={16} className="animate-spin" />}
-                            {loading ? 'Processing...' : 'Proceed to Payment'}
+                            {loading ? 'Processing...' : 'Pay Now'}
                         </button>
                     </div>
                 </div>
