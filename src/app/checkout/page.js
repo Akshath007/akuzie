@@ -225,27 +225,12 @@ export default function CheckoutPage() {
                             ))}
                         </div>
 
-                        <div className="text-xs text-gray-500 text-center max-w-md mx-auto">
-                            You will be redirected to our secure payment partner to complete your purchase.
+                        <div className="text-xs text-gray-400 text-center max-w-sm mx-auto leading-relaxed">
+                            Complete your purchase securely via UPI. Scan the QR code or pay directly from your favorite apps.
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <button
-                            onClick={handlePaymentComplete}
-                            disabled={loading}
-                            className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                        >
-                            {loading && <Loader2 size={16} className="animate-spin" />}
-                            {loading ? 'Processing...' : 'Pay with Cards / Netbanking'}
-                        </button>
-
-                        <div className="flex items-center gap-4 py-2">
-                            <div className="flex-1 h-[1px] bg-gray-100"></div>
-                            <span className="text-[10px] font-bold text-gray-300 tracking-widest uppercase">Alternative</span>
-                            <div className="flex-1 h-[1px] bg-gray-100"></div>
-                        </div>
-
+                    <div className="flex flex-col gap-6">
                         <button
                             onClick={async () => {
                                 setLoading(true);
@@ -271,18 +256,24 @@ export default function CheckoutPage() {
                                 }
                             }}
                             disabled={loading}
-                            className="w-full bg-white text-violet-600 border border-violet-100 py-4 text-sm uppercase tracking-widest hover:bg-violet-50 transition-all flex items-center justify-center gap-2 font-bold shadow-sm shadow-violet-100 disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-5 rounded-2xl text-sm font-bold uppercase tracking-[0.2em] shadow-xl shadow-violet-200 hover:shadow-violet-300 hover:scale-[1.01] transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
                         >
-                            <QrCode size={18} />
-                            {loading ? 'Processing...' : 'Scan & Pay (UPI QR)'}
+                            {loading ? (
+                                <Loader2 size={20} className="animate-spin" />
+                            ) : (
+                                <>
+                                    <QrCode size={20} />
+                                    Proceed to UPI Payment
+                                </>
+                            )}
                         </button>
 
                         <button
                             onClick={() => setStep(1)}
                             disabled={loading}
-                            className="w-full bg-transparent text-gray-400 py-2 text-[10px] uppercase tracking-widest hover:text-gray-600 transition-colors disabled:opacity-50"
+                            className="w-full text-gray-400 py-2 text-[10px] uppercase tracking-widest hover:text-gray-900 transition-colors disabled:opacity-50 font-bold"
                         >
-                            Back to Shipping Details
+                            ← Edit Shipping Details
                         </button>
                     </div>
                 </div>
