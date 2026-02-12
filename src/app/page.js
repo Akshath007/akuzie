@@ -108,10 +108,10 @@ export default function Home() {
             </FadeIn>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-24">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 md:gap-x-12 md:gap-y-24">
             {loading ? (
-              [1, 2, 3].map(i => (
-                <div key={i} className="aspect-[3/4] bg-gray-50 animate-pulse rounded-3xl"></div>
+              [1, 2, 3, 4].map(i => (
+                <div key={i} className="aspect-[3/4] bg-gray-50 animate-pulse rounded-2xl md:rounded-3xl"></div>
               ))
             ) : (
               paintings.map((p, i) => (
