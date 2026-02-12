@@ -2,8 +2,8 @@ import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { Readable } from 'stream';
 
-// Google Drive Folder Name
-const FOLDER_NAME = 'Akuzie Payments';
+// Google Drive Shared Folder ID
+const FOLDER_ID = '1SZSTLb9U_OM-VhpeZly-nzfne3WUNNwK';
 
 const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -17,29 +17,6 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: 'v3', auth });
 
-async function getOrCreateFolder(folderName) {
-    const response = await drive.files.list({
-        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: 'files(id)',
-    });
-
-    if (response.data.files.length > 0) {
-        return response.data.files[0].id;
-    }
-
-    const folderMetadata = {
-        name: folderName,
-        mimeType: 'application/vnd.google-apps.folder',
-    };
-
-    const folder = await drive.files.create({
-        resource: folderMetadata,
-        fields: 'id',
-    });
-
-    return folder.data.id;
-}
-
 export async function POST(req) {
     try {
         const formData = await req.formData();
@@ -51,11 +28,10 @@ export async function POST(req) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const folderId = await getOrCreateFolder(FOLDER_NAME);
 
         const fileMetadata = {
             name: `Payment_${orderId}_${Date.now()}.jpg`,
-            parents: [folderId],
+            parents: [FOLDER_ID],
         };
 
         const media = {
@@ -80,8 +56,7 @@ export async function POST(req) {
             },
         });
 
-        // Construct a direct viewing URL or use webViewLink
-        // webContentLink is a direct download link, webViewLink is the Drive UI
+        // Construct a direct viewing URL
         const viewUrl = `https://lh3.googleusercontent.com/u/0/d/${fileId}`;
 
         return NextResponse.json({
