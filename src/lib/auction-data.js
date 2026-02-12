@@ -16,6 +16,16 @@ import {
     Timestamp
 } from "firebase/firestore";
 
+const safeToMillis = (dateValue) => {
+    if (!dateValue) return null;
+    if (typeof dateValue.toMillis === 'function') return dateValue.toMillis();
+    if (typeof dateValue.toDate === 'function') return dateValue.toDate().getTime();
+    if (dateValue instanceof Date) return dateValue.getTime();
+    if (typeof dateValue === 'number') return dateValue;
+    const date = new Date(dateValue);
+    return isNaN(date.getTime()) ? null : date.getTime();
+};
+
 // --- Collection Refs ---
 const auctionsRef = collection(db, "auctions");
 const bidsRef = collection(db, "bids");
@@ -140,8 +150,8 @@ export async function getActiveAuctions() {
         const results = fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         // Sort client-side as fallback
         results.sort((a, b) => {
-            const aEnd = a.endTime?.toMillis ? a.endTime.toMillis() : (a.endTime instanceof Date ? a.endTime.getTime() : 0);
-            const bEnd = b.endTime?.toMillis ? b.endTime.toMillis() : (b.endTime instanceof Date ? b.endTime.getTime() : 0);
+            const aEnd = safeToMillis(a.endTime) || 0;
+            const bEnd = safeToMillis(b.endTime) || 0;
             return aEnd - bEnd;
         });
         return results;
@@ -158,9 +168,9 @@ export async function getAuction(id) {
             id: docSnap.id,
             ...data,
             // Convert timestamps for serializability if needed on client
-            startTime: data.startTime?.toMillis(),
-            endTime: data.endTime?.toMillis(),
-            createdAt: data.createdAt?.toMillis()
+            startTime: safeToMillis(data.startTime),
+            endTime: safeToMillis(data.endTime),
+            createdAt: safeToMillis(data.createdAt)
         };
     } else {
         return null;
@@ -174,7 +184,7 @@ export async function getBids(auctionId) {
     return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        timestamp: doc.data().timestamp?.toMillis()
+        timestamp: safeToMillis(doc.data().timestamp)
     }));
 }
 

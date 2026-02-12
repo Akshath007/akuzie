@@ -2,6 +2,16 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { PAINTING_STATUS, ORDER_STATUS } from "./utils";
 
+const safeToMillis = (dateValue) => {
+    if (!dateValue) return null;
+    if (typeof dateValue.toMillis === 'function') return dateValue.toMillis();
+    if (typeof dateValue.toDate === 'function') return dateValue.toDate().getTime();
+    if (dateValue instanceof Date) return dateValue.getTime();
+    if (typeof dateValue === 'number') return dateValue;
+    const date = new Date(dateValue);
+    return isNaN(date.getTime()) ? null : date.getTime();
+};
+
 // Paintings and Crochet
 export async function getPaintings(category = null) {
     const paintingsCol = collection(db, "paintings");
@@ -17,7 +27,7 @@ export async function getPaintings(category = null) {
             ...data,
             // Backwards compatibility: Default to 'painting' if no category
             category: data.category || 'painting',
-            createdAt: data.createdAt?.toMillis() || null,
+            createdAt: safeToMillis(data.createdAt),
         };
     });
 
@@ -37,7 +47,7 @@ export async function getPainting(id) {
         return {
             id: docSnap.id,
             ...data,
-            createdAt: data.createdAt?.toMillis() || null,
+            createdAt: safeToMillis(data.createdAt),
         };
     }
     return null;
@@ -95,7 +105,7 @@ export async function getOrders() {
         return {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt?.toMillis() || null,
+            createdAt: safeToMillis(data.createdAt),
         };
     });
 }
@@ -166,7 +176,7 @@ export async function getUserOrders(email) {
         return {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt?.toMillis() || null,
+            createdAt: safeToMillis(data.createdAt),
         };
     });
 }
