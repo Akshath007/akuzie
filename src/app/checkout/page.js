@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
-import { processOrder } from '@/lib/data';
+import { processOrder, getPainting } from '@/lib/data';
 import { formatPrice } from '@/lib/utils';
 import { Loader2, QrCode } from 'lucide-react';
 import Link from 'next/link';
@@ -247,6 +247,17 @@ export default function CheckoutPage() {
                                         method: 'manual_upi'
                                     };
                                     const paintingIds = cart.map(item => item.id);
+
+                                    // Final safety check: ensure none of the items were sold in the last few seconds
+                                    const availabilityChecks = await Promise.all(paintingIds.map(id => getPainting(id)));
+                                    const soldItems = availabilityChecks.filter(p => !p || p.status === 'sold');
+
+                                    if (soldItems.length > 0) {
+                                        alert("Sorry, one or more items in your cart were just purchased by someone else. You will be redirected to the cart to update your order.");
+                                        router.push('/cart');
+                                        return;
+                                    }
+
                                     const orderId = await processOrder(orderData, paintingIds);
                                     router.push(`/checkout/manual-payment?orderId=${orderId}`);
                                 } catch (err) {

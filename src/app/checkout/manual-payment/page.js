@@ -7,6 +7,7 @@ import { formatPrice } from '@/lib/utils';
 import { Upload, CheckCircle2, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { markItemsAsSold } from '@/lib/data';
 
 function ManualPaymentContent() {
     const { cart, clearCart } = useCart();
@@ -76,6 +77,9 @@ function ManualPaymentContent() {
                 paymentStatus: 'pending',
                 paymentUploadedAt: serverTimestamp(),
             });
+
+            // 3. Mark items as SOLD instantly to prevent others from buying
+            await markItemsAsSold(orderId);
 
             setIsSuccess(true);
             clearCart();
