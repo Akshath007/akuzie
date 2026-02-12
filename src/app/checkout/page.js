@@ -12,6 +12,7 @@ import { load } from '@cashfreepayments/cashfree-js';
 
 export default function CheckoutPage() {
     const { cart, clearCart } = useCart();
+    const router = useRouter();
     const { user } = useAuth();
     const [step, setStep] = useState(1); // 1: Details, 2: Payment
     const [loading, setLoading] = useState(false);
@@ -254,7 +255,9 @@ export default function CheckoutPage() {
                                         items: cart.map(item => ({ id: item.id, title: item.title, price: item.price, images: item.images || [], medium: item.medium || '' })),
                                         totalAmount: total,
                                         paymentStatus: 'pending',
-                                        method: 'manual_upi'
+                                        method: 'manual_upi',
+                                        userId: user?.uid || null,
+                                        userEmail: user?.email || formData.email,
                                     };
                                     const paintingIds = cart.map(item => item.id);
 

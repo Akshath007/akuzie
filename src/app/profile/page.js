@@ -25,7 +25,7 @@ function ProfileContent() {
         const fetchOrders = async () => {
             if (user?.email) {
                 try {
-                    const userOrders = await getUserOrders(user.email);
+                    const userOrders = await getUserOrders(user.email, user.uid);
                     setOrders(userOrders);
                 } catch (error) {
                     console.error("Error fetching orders:", error);
