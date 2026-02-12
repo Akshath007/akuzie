@@ -17,6 +17,11 @@ const nextConfig = {
         hostname: 'files.edgestore.dev',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
     ],
   },
 };
