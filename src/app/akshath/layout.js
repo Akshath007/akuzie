@@ -19,6 +19,7 @@ export default function AdminRootLayout({ children }) {
 
                         <nav className="flex items-center gap-6 text-sm font-medium text-gray-500 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-none">
                             <Link href="/akshath/dashboard" className="hover:text-gray-900 transition-colors whitespace-nowrap">Overview</Link>
+                            <Link href="/akshath/auctions" className="hover:text-gray-900 transition-colors whitespace-nowrap">Auctions</Link>
                             <Link href="/akshath/orders" className="hover:text-gray-900 transition-colors whitespace-nowrap">Orders</Link>
                             <Link href="/akshath/add" className="hover:text-gray-900 transition-colors whitespace-nowrap">Add Product</Link>
                         </nav>

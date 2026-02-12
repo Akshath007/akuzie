@@ -127,12 +127,25 @@ export async function updatePainting(id, data) {
 }
 
 export async function updateOrderStatus(id, status) {
-    const docRef = doc(db, "orders", id);
-    await updateDoc(docRef, { paymentStatus: status });
+    const orderRef = doc(db, "orders", id);
+    const orderSnap = await getDoc(orderRef);
 
-    // If marking as paid, also mark items as sold
-    if (status === ORDER_STATUS.PAID) {
-        await markItemsAsSold(id);
+    if (!orderSnap.exists()) return;
+
+    const orderData = orderSnap.data();
+
+    // Update Order Status
+    await updateDoc(orderRef, { paymentStatus: status });
+
+    // Handle Normal Items (Mark as Sold)
+    if (status === ORDER_STATUS.PAID && !orderData.type) {
+        await markItemsAsSold(id); // Original logic for normal cart orders
+    }
+
+    // Handle Auction Items
+    if (status === ORDER_STATUS.PAID && orderData.type === 'auction' && orderData.auctionId) {
+        const auctionRef = doc(db, "auctions", orderData.auctionId);
+        await updateDoc(auctionRef, { status: 'sold' });
     }
 }
 
