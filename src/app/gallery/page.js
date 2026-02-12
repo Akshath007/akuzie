@@ -23,9 +23,13 @@ function GalleryContent() {
     }, [category]);
 
     const filteredPaintings = useMemo(() => {
-        if (!query) return paintings;
+        // Filter out sold items based on user checklist "sold items hidden"
+        const availableOnly = paintings.filter(p => p.status !== 'sold');
+
+        if (!query) return availableOnly;
+
         const lowerQ = query.toLowerCase();
-        return paintings.filter(p =>
+        return availableOnly.filter(p =>
             p.title.toLowerCase().includes(lowerQ) ||
             p.description?.toLowerCase().includes(lowerQ) ||
             p.medium?.toLowerCase().includes(lowerQ)

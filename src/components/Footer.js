@@ -53,6 +53,7 @@ export default function Footer() {
 
                 {/* Legal Links */}
                 <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-[11px] uppercase tracking-widest font-medium text-gray-400">
+                    <Link href="/contact" className="hover:text-stone-800 transition-colors">Connect</Link>
                     <Link href="/privacy" className="hover:text-stone-800 transition-colors">Privacy Policy</Link>
                     <Link href="/terms" className="hover:text-stone-800 transition-colors">Terms of Service</Link>
                     <Link href="/refund-policy" className="hover:text-stone-800 transition-colors">Refund Policy</Link>
