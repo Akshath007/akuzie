@@ -26,7 +26,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Auction is not ready for payment' }, { status: 400 });
         }
 
-        if (auction.highestBidderId !== userId) {
+        const currentWinnerId = auction.currentWinnerId || auction.highestBidderId;
+        const payAmount = auction.currentWinningBid || auction.currentHighestBid;
+
+        if (currentWinnerId !== userId) {
             return NextResponse.json({ error: 'Forbidden: You are not the winner' }, { status: 403 });
         }
 
@@ -42,10 +45,10 @@ export async function POST(request) {
             items: [{
                 id: auctionId,
                 title: `Auction: ${auction.title}`,
-                price: auction.currentHighestBid,
+                price: payAmount,
                 image: auction.images?.[0]
             }],
-            totalAmount: auction.currentHighestBid,
+            totalAmount: payAmount,
             paymentStatus: 'payment_pending',
             userId: userId,
             createdAt: serverTimestamp()
@@ -54,7 +57,7 @@ export async function POST(request) {
         const orderId = orderRef.id;
 
         // 4. Create Cashfree Order
-        const amount = auction.currentHighestBid;
+        const amount = payAmount;
         const isSandbox = process.env.NEXT_PUBLIC_CASHFREE_MODE === 'sandbox';
         const apiUrl = isSandbox
             ? 'https://sandbox.cashfree.com/pg/orders'

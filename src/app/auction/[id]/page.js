@@ -113,8 +113,10 @@ export default function AuctionDetailPage() {
 
     if (!auction) return <div className="p-20 text-center">Auction not found.</div>;
 
-    const isEnded = auction.status === 'ended' || new Date() > auction.endTime.toDate();
-    const isWinner = isEnded && user && auction.highestBidderId === user.uid;
+    const isEnded = auction.status === 'ended' || auction.status === 'awaiting_payment' || auction.status === 'unsold' || new Date() > auction.endTime.toDate();
+    // Cascading winner: currentWinnerId (set by admin pass-to-next) takes priority over highestBidderId
+    const currentWinner = auction.currentWinnerId || auction.highestBidderId;
+    const isWinner = isEnded && user && currentWinner === user.uid && auction.status !== 'unsold';
     const minNextBid = (auction.currentHighestBid || 0) + (auction.minBidIncrement || 0);
 
     return (
@@ -240,10 +242,17 @@ export default function AuctionDetailPage() {
                             ) : (
                                 <div className="bg-gray-100 p-8 rounded-2xl text-center">
                                     <h3 className="text-xl font-serif text-gray-900 mb-2">Auction Ended</h3>
-                                    {isWinner ? (
+                                    {auction.status === 'unsold' ? (
+                                        <p className="text-gray-500">
+                                            This auction ended with no buyer. All bidders have been passed.
+                                        </p>
+                                    ) : isWinner ? (
                                         <div className="animate-in fade-in zoom-in duration-500">
-                                            <p className="text-green-600 font-bold mb-6 flex items-center justify-center gap-2">
+                                            <p className="text-green-600 font-bold mb-2 flex items-center justify-center gap-2">
                                                 <ShieldCheck /> You won this auction!
+                                            </p>
+                                            <p className="text-sm text-gray-500 mb-6">
+                                                Your winning bid: <span className="font-bold text-gray-900">{formatPrice(auction.currentWinningBid || auction.currentHighestBid)}</span>
                                             </p>
                                             <Link
                                                 href={`/checkout/auction/${auction.id}`}
@@ -251,10 +260,13 @@ export default function AuctionDetailPage() {
                                             >
                                                 Claim & Pay Now
                                             </Link>
+                                            <p className="text-xs text-gray-400 mt-4">
+                                                Please complete payment within 24 hours or it may be passed to the next bidder.
+                                            </p>
                                         </div>
                                     ) : (
                                         <p className="text-gray-500">
-                                            Winning Bid: <span className="font-bold text-gray-900">{formatPrice(auction.currentHighestBid)}</span>
+                                            Winning Bid: <span className="font-bold text-gray-900">{formatPrice(auction.currentWinningBid || auction.currentHighestBid)}</span>
                                         </p>
                                     )}
                                 </div>

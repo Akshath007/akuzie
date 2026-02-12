@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { deleteAuction } from '@/lib/auction-data';
+import { deleteAuction, passToNextBidder } from '@/lib/auction-data';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Gavel, Timer, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Plus, Gavel, Timer, Trash2, ArrowDownCircle, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 export default function AuctionsPage() {
     const [auctions, setAuctions] = useState([]);
@@ -49,6 +49,16 @@ export default function AuctionsPage() {
         }
     };
 
+    const handlePassToNext = async (id, title) => {
+        if (!confirm(`Pass "${title}" to the next highest bidder? The current winner will lose their purchase rights.`)) return;
+        try {
+            const result = await passToNextBidder(id);
+            alert(result.message);
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    };
+
     if (loading) return <div className="p-8">Loading auctions...</div>;
 
     return (
@@ -83,15 +93,25 @@ export default function AuctionsPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-serif text-lg text-gray-900">{auction.title}</h3>
-                                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-1 flex-wrap">
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${auction.status === 'active' && !isEnded ? 'bg-green-100 text-green-700' :
                                             auction.status === 'sold' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-gray-100 text-gray-600'
+                                                auction.status === 'awaiting_payment' ? 'bg-amber-100 text-amber-700' :
+                                                    auction.status === 'unsold' ? 'bg-red-100 text-red-700' :
+                                                        'bg-gray-100 text-gray-600'
                                             }`}>
-                                            {isEnded && auction.status === 'active' ? 'Ended' : auction.status}
+                                            {isEnded && auction.status === 'active' ? 'Ended' : auction.status === 'awaiting_payment' ? 'Awaiting Payment' : auction.status}
                                         </span>
                                         <span>•</span>
                                         <span>Bids: {auction.bidCount || 0}</span>
+                                        {(auction.currentWinnerId || (isEnded && auction.highestBidderId)) && auction.status !== 'unsold' && (
+                                            <>
+                                                <span>•</span>
+                                                <span className="text-xs text-violet-600 font-medium" title={auction.currentWinnerId || auction.highestBidderId}>
+                                                    Winner: {(auction.currentWinnerId || auction.highestBidderId).slice(0, 8)}...
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -124,7 +144,7 @@ export default function AuctionsPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 {auction.status === 'active' && !isEnded && (
                                     <button
                                         onClick={() => handleEndAuction(auction.id)}
@@ -133,9 +153,23 @@ export default function AuctionsPage() {
                                         End Now
                                     </button>
                                 )}
-                                {isEnded && auction.status !== 'sold' && auction.highestBidderId && (
+                                {(isEnded || auction.status === 'awaiting_payment') && auction.status !== 'sold' && auction.status !== 'unsold' && (auction.highestBidderId || auction.currentWinnerId) && (
+                                    <button
+                                        onClick={() => handlePassToNext(auction.id, auction.title)}
+                                        className="flex items-center gap-1.5 text-amber-600 hover:bg-amber-50 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                                        title="Current winner didn't pay? Pass to the next highest bidder."
+                                    >
+                                        <ArrowDownCircle size={14} /> Pass to Next
+                                    </button>
+                                )}
+                                {isEnded && auction.status !== 'sold' && (auction.highestBidderId || auction.currentWinnerId) && auction.status !== 'unsold' && (
                                     <div className="flex flex-col items-end">
                                         <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">Awaiting Payment</span>
+                                    </div>
+                                )}
+                                {auction.status === 'unsold' && (
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">No Buyers Left</span>
                                     </div>
                                 )}
                                 <button

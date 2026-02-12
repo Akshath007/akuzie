@@ -5,7 +5,7 @@ import { getPaintings, deletePainting, updatePainting } from '@/lib/data';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { Trash2, Edit, TrendingUp, ImageIcon, Plus, Package, ShoppingBag } from 'lucide-react';
+import { Trash2, Edit, TrendingUp, ImageIcon, Plus, Package, ShoppingBag, Users } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
@@ -66,14 +66,18 @@ export default function DashboardPage() {
                     <h1 className="text-3xl font-serif text-gray-900">Admin Dashboard</h1>
                     <p className="text-gray-500">Manage your gallery and orders.</p>
                 </div>
-                <div className="flex gap-3">
-                    <Link href="/akshath/orders" className="flex items-center gap-2 px-6 py-2 bg-white border border-gray-200 text-gray-900 rounded-full hover:bg-gray-50 transition-colors">
-                        <ShoppingBag size={18} />
-                        View Orders
+                <div className="flex bg-white p-1.5 rounded-full border border-gray-100 shadow-sm gap-1 overflow-x-auto">
+                    <Link href="/akshath/orders" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
+                        <ShoppingBag size={16} />
+                        Orders
                     </Link>
-                    <Link href="/akshath/add" className="flex items-center gap-2 px-6 py-2 bg-violet-600 text-white rounded-full hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200">
-                        <Plus size={18} />
-                        Add New Painting
+                    <Link href="/akshath/dashboard/analytics" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
+                        <Users size={16} />
+                        Analytics
+                    </Link>
+                    <Link href="/akshath/add" className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-full hover:bg-violet-700 transition-colors shadow-md shadow-violet-200 text-sm font-medium whitespace-nowrap">
+                        <Plus size={16} />
+                        New Art
                     </Link>
                 </div>
             </div>

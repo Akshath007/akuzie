@@ -200,3 +200,88 @@ export async function deleteAuction(auctionId) {
         throw error;
     }
 }
+
+// --- HELPER: Pass to next bidder (cascading payment) ---
+export async function passToNextBidder(auctionId) {
+    try {
+        const auctionRef = doc(db, "auctions", auctionId);
+        const auctionSnap = await getDoc(auctionRef);
+
+        if (!auctionSnap.exists()) {
+            throw new Error("Auction not found");
+        }
+
+        const auctionData = auctionSnap.data();
+        const skippedBidders = auctionData.skippedBidders || [];
+
+        // The current winner (either cascaded or original highest bidder)
+        const currentWinner = auctionData.currentWinnerId || auctionData.highestBidderId;
+
+        // Add the current winner to skipped list
+        if (currentWinner && !skippedBidders.includes(currentWinner)) {
+            skippedBidders.push(currentWinner);
+        }
+
+        // Fetch all bids for this auction, sorted by amount descending (highest first)
+        const bidsQuery = query(
+            bidsRef,
+            where("auctionId", "==", auctionId),
+            orderBy("amount", "desc")
+        );
+        const bidsSnapshot = await getDocs(bidsQuery);
+
+        // Find the next eligible bidder (unique users, not already skipped)
+        let nextWinner = null;
+        const seenUsers = new Set();
+
+        for (const bidDoc of bidsSnapshot.docs) {
+            const bid = bidDoc.data();
+            // Skip if we've already seen this user (they may have multiple bids)
+            if (seenUsers.has(bid.userId)) continue;
+            seenUsers.add(bid.userId);
+
+            // Skip if this user is in the skipped list
+            if (skippedBidders.includes(bid.userId)) continue;
+
+            // This is our next winner!
+            nextWinner = {
+                userId: bid.userId,
+                amount: bid.amount
+            };
+            break;
+        }
+
+        if (nextWinner) {
+            // Update auction with the new current winner
+            await updateDoc(auctionRef, {
+                currentWinnerId: nextWinner.userId,
+                currentWinningBid: nextWinner.amount,
+                skippedBidders: skippedBidders,
+                status: 'awaiting_payment'
+            });
+
+            return {
+                success: true,
+                newWinner: nextWinner,
+                message: `Passed to next bidder. New winning bid: ${nextWinner.amount}`
+            };
+        } else {
+            // No more bidders available — mark auction as unsold
+            await updateDoc(auctionRef, {
+                currentWinnerId: null,
+                currentWinningBid: null,
+                skippedBidders: skippedBidders,
+                status: 'unsold'
+            });
+
+            return {
+                success: true,
+                newWinner: null,
+                message: "No more eligible bidders. Auction marked as unsold."
+            };
+        }
+    } catch (error) {
+        console.error("Error passing to next bidder: ", error);
+        throw error;
+    }
+}

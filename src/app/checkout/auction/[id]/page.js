@@ -42,8 +42,9 @@ export default function AuctionCheckoutPage() {
 
                 const data = { id: docSnap.id, ...docSnap.data() };
 
-                // Validate Winner
-                if (data.highestBidderId !== user.uid) {
+                // Validate Winner (Check currentWinnerId first for cascading support)
+                const currentWinnerId = data.currentWinnerId || data.highestBidderId;
+                if (currentWinnerId !== user.uid) {
                     setError('Forbidden: Only the winner can access checkout.');
                     setLoading(false);
                     return;
@@ -130,6 +131,9 @@ export default function AuctionCheckoutPage() {
         );
     }
 
+    // Determine correct price to show
+    const payAmount = auction.currentWinningBid || auction.currentHighestBid;
+
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 md:p-12">
             <div className="bg-white max-w-lg w-full rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-300">
@@ -161,7 +165,7 @@ export default function AuctionCheckoutPage() {
                     <div className="border-t border-b border-gray-100 py-6 space-y-4">
                         <div className="flex justify-between items-center text-sm text-gray-500">
                             <span>Winning Bid</span>
-                            <span className="font-bold text-gray-900 text-lg">{formatPrice(auction.currentHighestBid)}</span>
+                            <span className="font-bold text-gray-900 text-lg">{formatPrice(payAmount)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm text-gray-500">
                             <span>Platform Fee</span>
@@ -169,7 +173,7 @@ export default function AuctionCheckoutPage() {
                         </div>
                         <div className="flex justify-between items-center text-sm font-bold text-gray-900 pt-4 border-t border-gray-50">
                             <span>Total Payable</span>
-                            <span className="text-xl text-violet-600">{formatPrice(auction.currentHighestBid)}</span>
+                            <span className="text-xl text-violet-600">{formatPrice(payAmount)}</span>
                         </div>
                     </div>
 

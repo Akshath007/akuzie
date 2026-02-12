@@ -2,7 +2,8 @@
 
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
@@ -20,47 +21,54 @@ export function AuthProvider({ children }) {
         return () => unsubscribe();
     }, []);
 
+    const syncUserToFirestore = async (user) => {
+        if (!user) return;
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName || '',
+                    photoURL: user.photoURL || '',
+                    createdAt: serverTimestamp(),
+                    lastLoginAt: serverTimestamp(),
+                });
+            } else {
+                await setDoc(userRef, {
+                    lastLoginAt: serverTimestamp(),
+                    email: user.email, // Keep email updated
+                    displayName: user.displayName || userSnap.data().displayName, // Update only if present
+                    photoURL: user.photoURL || userSnap.data().photoURL
+                }, { merge: true });
+            }
+        } catch (error) {
+            console.error("Error syncing user to Firestore:", error);
+        }
+    };
+
     const loginWithGoogle = async () => {
         try {
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-
-            // Check if user exists in Firestore, if not create new
-            try {
-                const { doc, getDoc, setDoc, serverTimestamp } = await import('firebase/firestore');
-                const { db } = await import('@/lib/firebase');
-
-                const userRef = doc(db, 'users', user.uid);
-                const userSnap = await getDoc(userRef);
-
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName,
-                        photoURL: user.photoURL,
-                        createdAt: serverTimestamp(),
-                        lastLoginAt: serverTimestamp(),
-                    });
-                } else {
-                    await setDoc(userRef, {
-                        lastLoginAt: serverTimestamp()
-                    }, { merge: true });
-                }
-            } catch (dbError) {
-                console.error("Error saving user to Firestore (Login proceeded anyway):", dbError);
-                // We do NOT throw here, allowing the user to still log in even if DB fails
-            }
-
+            await syncUserToFirestore(result.user);
+            return result;
         } catch (error) {
             console.error("Error signing in with Google", error);
             throw error;
         }
     };
 
-    const login = (email, password) => {
-        return signInWithEmailAndPassword(auth, email, password);
+    const login = async (email, password) => {
+        try {
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            await syncUserToFirestore(result.user);
+            return result;
+        } catch (error) {
+            throw error;
+        }
     };
 
     const logout = () => {
