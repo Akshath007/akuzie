@@ -9,7 +9,7 @@ import { db } from '@/lib/firebase';
 import { placeBid } from '@/lib/auction-data';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { Timer, Gavel, ArrowRight, AlertCircle, ShieldCheck, Clock } from 'lucide-react';
+import { Timer, Gavel, ArrowRight, AlertCircle, ShieldCheck, Clock, TrendingUp } from 'lucide-react';
 
 export default function AuctionDetailPage() {
     const { id } = useParams();
@@ -17,24 +17,25 @@ export default function AuctionDetailPage() {
     const router = useRouter();
 
     const [auction, setAuction] = useState(null);
+    const [bids, setBids] = useState([]);
     const [loading, setLoading] = useState(true);
     const [bidAmount, setBidAmount] = useState('');
     const [placingBid, setPlacingBid] = useState(false);
     const [timeLeft, setTimeLeft] = useState('');
     const [error, setError] = useState(null);
 
-    // Fetch Auction Data (Realtime)
+    // Fetch Auction Data & Bids (Realtime)
     useEffect(() => {
         if (!id) return;
-        const unsubscribe = onSnapshot(doc(db, "auctions", id), (doc) => {
+
+        // 1. Auction Details Listener
+        const unsubAuction = onSnapshot(doc(db, "auctions", id), (doc) => {
             if (doc.exists()) {
                 const data = doc.data();
                 setAuction({ id: doc.id, ...data });
 
-                // Calculate initial time left immediately
                 if (data.endTime) {
                     const end = data.endTime.toDate();
-                    const now = new Date();
                     updateTimer(end);
                 }
             } else {
@@ -43,7 +44,25 @@ export default function AuctionDetailPage() {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        // 2. Bids History Listener (Real-time feed)
+        const qBids = query(
+            collection(db, "bids"),
+            where("auctionId", "==", id),
+            orderBy("amount", "desc"),
+            limit(10) // Show last 10 highest bids
+        );
+        const unsubBids = onSnapshot(qBids, (snapshot) => {
+            const bidsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setBids(bidsData);
+        });
+
+        return () => {
+            unsubAuction();
+            unsubBids();
+        };
     }, [id]);
 
     // Timer Logic
@@ -95,9 +114,9 @@ export default function AuctionDetailPage() {
 
         setPlacingBid(true);
         try {
-            await placeBid(id, user.uid, amount);
+            await placeBid(id, user.uid, amount, user.displayName || 'Anonymous');
             setBidAmount(''); // Clear input on success
-            alert("Bid placed successfully!");
+            // Removed alert for smoother experience, real-time update is enough feedback
         } catch (err) {
             setError("Failed to place bid: " + (err.message || err));
         } finally {
@@ -110,6 +129,14 @@ export default function AuctionDetailPage() {
             <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
     );
+
+    const maskName = (name) => {
+        if (!name || name === 'Anonymous' || name === 'Masked User') return 'User';
+        const parts = name.split(' ');
+        const first = parts[0];
+        if (first.length <= 2) return first + '***';
+        return first.substring(0, 2) + '***' + first.substring(first.length - 1);
+    };
 
     if (!auction) return <div className="p-20 text-center">Auction not found.</div>;
 
@@ -271,59 +298,66 @@ export default function AuctionDetailPage() {
                                     )}
                                 </div>
                             )}
+
+                            {/* Real-time Bid History Feed */}
+                            <div className="pt-8 mt-8 border-t border-gray-100">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
+                                    <TrendingUp size={14} className="text-violet-500" /> Recent Activity
+                                </h4>
+                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {bids.length > 0 ? (
+                                        bids.map((bid, index) => (
+                                            <div
+                                                key={bid.id}
+                                                className={`flex items-center justify-between animate-in fade-in slide-in-from-right-4 duration-500`}
+                                                style={{ animationDelay: `${index * 50}ms` }}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-violet-600 text-white shadow-lg shadow-violet-200' : 'bg-gray-100 text-gray-500'}`}>
+                                                        {index === 0 ? <Gavel size={12} /> : index + 1}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {maskName(bid.userName)}
+                                                            {index === 0 && <span className="ml-2 text-[10px] text-violet-600 font-bold uppercase tracking-tighter bg-violet-50 px-1.5 py-0.5 rounded">Highest</span>}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400 font-mono italic">
+                                                            {bid.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p className={`font-mono font-bold ${index === 0 ? 'text-violet-600 text-lg' : 'text-gray-900 text-sm'}`}>
+                                                    {formatPrice(bid.amount)}
+                                                </p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-400 italic text-sm">
+                                            No bids placed yet. Be the first!
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                {/* Recent Bids Section */}
-                <div className="mt-24 max-w-3xl mx-auto">
-                    <h3 className="text-2xl font-serif text-gray-900 mb-8 text-center">Recent Activity</h3>
-                    <BidHistory auctionId={id} />
                 </div>
             </div>
-        </div>
-    );
-}
 
-function BidHistory({ auctionId }) {
-    const [bids, setBids] = useState([]);
-
-    useEffect(() => {
-        if (!auctionId) return;
-        const q = query(
-            collection(db, "bids"),
-            where("auctionId", "==", auctionId),
-            orderBy("timestamp", "desc"),
-            limit(10)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setBids(data);
-        });
-        return () => unsubscribe();
-    }, [auctionId]);
-
-    if (bids.length === 0) return <p className="text-gray-400 text-center italic">No bids yet. Be the first!</p>;
-
-    return (
-        <div className="space-y-4">
-            {bids.map((bid) => (
-                <div key={bid.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm animate-in slide-in-from-bottom-2">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xs">
-                            {bid.userId.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold text-gray-900">User {bid.userId.slice(0, 6)}...</p>
-                            <p className="text-xs text-gray-400">
-                                {bid.timestamp?.toDate().toLocaleTimeString()}
-                            </p>
-                        </div>
-                    </div>
-                    <p className="font-mono font-bold text-violet-600">{formatPrice(bid.amount)}</p>
-                </div>
-            ))}
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #eee;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #ddd;
+                }
+            `}</style>
         </div>
     );
 }

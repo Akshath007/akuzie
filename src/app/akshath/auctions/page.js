@@ -6,11 +6,12 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp } fro
 import { db } from '@/lib/firebase';
 import { deleteAuction, passToNextBidder } from '@/lib/auction-data';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Gavel, Timer, Trash2, ArrowDownCircle, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Plus, Gavel, Timer, Trash2, ArrowDownCircle, CheckCircle, XCircle, AlertCircle, TrendingUp } from 'lucide-react';
 
 export default function AuctionsPage() {
     const [auctions, setAuctions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [expandedAuctionId, setExpandedAuctionId] = useState(null);
 
     useEffect(() => {
         const q = query(collection(db, "auctions"), orderBy("createdAt", "desc"));
@@ -107,8 +108,8 @@ export default function AuctionsPage() {
                                         {(auction.currentWinnerId || (isEnded && auction.highestBidderId)) && auction.status !== 'unsold' && (
                                             <>
                                                 <span>•</span>
-                                                <span className="text-xs text-violet-600 font-medium" title={auction.currentWinnerId || auction.highestBidderId}>
-                                                    Winner: {(auction.currentWinnerId || auction.highestBidderId).slice(0, 8)}...
+                                                <span className="text-xs text-violet-600 font-medium">
+                                                    Winner: {auction.highestBidderName || (auction.currentWinnerId || auction.highestBidderId).slice(0, 8) + '...'}
                                                 </span>
                                             </>
                                         )}
@@ -124,7 +125,7 @@ export default function AuctionsPage() {
                                     </p>
                                     {auction.highestBidderId && (
                                         <p className="text-xs text-gray-500 truncate max-w-[100px]" title={auction.highestBidderId}>
-                                            By: {auction.highestBidderId.slice(0, 8)}...
+                                            By: {auction.highestBidderName || auction.highestBidderId.slice(0, 8) + '...'}
                                         </p>
                                     )}
                                 </div>
@@ -173,6 +174,13 @@ export default function AuctionsPage() {
                                     </div>
                                 )}
                                 <button
+                                    onClick={() => setExpandedAuctionId(expandedAuctionId === auction.id ? null : auction.id)}
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${expandedAuctionId === auction.id ? 'bg-violet-600 text-white shadow-md' : 'bg-violet-50 text-violet-600 hover:bg-violet-100'}`}
+                                >
+                                    <Gavel size={14} /> Bids
+                                </button>
+
+                                <button
                                     onClick={() => handleDeleteAuction(auction.id, auction.title)}
                                     className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
                                     title="Delete auction"
@@ -180,6 +188,19 @@ export default function AuctionsPage() {
                                     <Trash2 size={16} />
                                 </button>
                             </div>
+
+                            {/* EXPANDE BIDS SECTION */}
+                            {expandedAuctionId === auction.id && (
+                                <div className="w-full mt-6 pt-6 border-t border-gray-100 animate-in slide-in-from-top-4 duration-300">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                                            <TrendingUp size={14} /> Detailed Bid History
+                                        </h4>
+                                        <span className="text-[10px] text-gray-400 uppercase font-mono">Real-time Feed</span>
+                                    </div>
+                                    <BidHistoryTable auctionId={auction.id} />
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -190,6 +211,73 @@ export default function AuctionsPage() {
                     </div>
                 )}
             </div>
+        </div>
+    );
+}
+
+// Internal component for real-time bid history in Admin
+function BidHistoryTable({ auctionId }) {
+    const [bids, setBids] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const q = query(
+            collection(db, "bids"),
+            where("auctionId", "==", auctionId),
+            orderBy("amount", "desc")
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setBids(data);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, [auctionId]);
+
+    if (loading) return <div className="text-center py-4 text-xs text-gray-400 animate-pulse">Updating bid history...</div>;
+    if (bids.length === 0) return <div className="text-center py-4 text-xs text-gray-400 italic">No bids placed for this auction yet.</div>;
+
+    return (
+        <div className="overflow-x-auto rounded-xl border border-gray-50 bg-gray-50/30">
+            <table className="w-full text-left text-xs">
+                <thead>
+                    <tr className="text-gray-400 uppercase tracking-tighter">
+                        <th className="p-3 font-medium">Rank</th>
+                        <th className="p-3 font-medium">Bidder</th>
+                        <th className="p-3 font-medium">User ID</th>
+                        <th className="p-3 font-medium">Time</th>
+                        <th className="p-3 font-medium text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {bids.map((bid, index) => (
+                        <tr key={bid.id} className={`${index === 0 ? 'bg-violet-50/50' : ''} hover:bg-gray-100/50 transition-colors`}>
+                            <td className="p-3 font-bold text-gray-400">
+                                {index === 0 ? <span className="text-violet-600">★ 1</span> : index + 1}
+                            </td>
+                            <td className="p-3">
+                                <span className={`font-bold ${index === 0 ? 'text-violet-700' : 'text-gray-900'}`}>
+                                    {bid.userName || 'Anonymous'}
+                                </span>
+                            </td>
+                            <td className="p-3 text-gray-400 font-mono text-[10px]" title={bid.userId}>
+                                {bid.userId.slice(0, 10)}...
+                            </td>
+                            <td className="p-3 text-gray-500">
+                                {bid.timestamp?.toDate().toLocaleString([], {
+                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                })}
+                            </td>
+                            <td className={`p-3 text-right font-mono font-bold ${index === 0 ? 'text-violet-700 text-sm' : 'text-gray-700'}`}>
+                                {formatPrice(bid.amount)}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }

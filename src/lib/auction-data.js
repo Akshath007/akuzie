@@ -49,7 +49,7 @@ export async function createAuction(data) {
 }
 
 // --- HELPER: Place Bid (Transactional) ---
-export async function placeBid(auctionId, userId, amount) {
+export async function placeBid(auctionId, userId, amount, userName = 'Masked User') {
     try {
         await runTransaction(db, async (transaction) => {
             const auctionDocRef = doc(db, "auctions", auctionId);
@@ -94,6 +94,7 @@ export async function placeBid(auctionId, userId, amount) {
             transaction.set(newBidRef, {
                 auctionId,
                 userId,
+                userName, // Store name for real-time display
                 amount,
                 timestamp: now
             });
@@ -102,6 +103,7 @@ export async function placeBid(auctionId, userId, amount) {
             transaction.update(auctionDocRef, {
                 currentHighestBid: amount,
                 highestBidderId: userId,
+                highestBidderName: userName,
                 endTime: newEndTime,
                 bidCount: (auctionData.bidCount || 0) + 1,
                 lastBidTime: now
