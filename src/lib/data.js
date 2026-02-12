@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { PAINTING_STATUS, ORDER_STATUS } from "./utils";
 
 // Paintings and Crochet
@@ -54,24 +54,36 @@ export async function createOrder(orderData) {
 }
 
 export async function processOrder(orderData, paintingIds) {
-    const batch = writeBatch(db);
-
-    // 1. Create Order
+    // Create Order — do NOT mark items as sold yet
+    // Items will be marked sold only after payment is confirmed
     const orderRef = doc(collection(db, "orders"));
-    batch.set(orderRef, {
+    await setDoc(orderRef, {
         ...orderData,
+        paintingIds, // Save IDs so we can mark them sold later
         paymentStatus: ORDER_STATUS.PAYMENT_PENDING,
         createdAt: serverTimestamp(),
     });
 
-    // 2. Mark paintings as sold
+    return orderRef.id;
+}
+
+// Mark items as sold — called only after payment is confirmed
+export async function markItemsAsSold(orderId) {
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) return;
+
+    const orderData = orderSnap.data();
+    const paintingIds = orderData.paintingIds || [];
+
+    if (paintingIds.length === 0) return;
+
+    const batch = writeBatch(db);
     paintingIds.forEach(id => {
         const paintingRef = doc(db, "paintings", id);
         batch.update(paintingRef, { status: PAINTING_STATUS.SOLD });
     });
-
     await batch.commit();
-    return orderRef.id;
 }
 
 export async function getOrders() {
@@ -117,6 +129,11 @@ export async function updatePainting(id, data) {
 export async function updateOrderStatus(id, status) {
     const docRef = doc(db, "orders", id);
     await updateDoc(docRef, { paymentStatus: status });
+
+    // If marking as paid, also mark items as sold
+    if (status === ORDER_STATUS.PAID) {
+        await markItemsAsSold(id);
+    }
 }
 
 export async function deleteOrder(id) {
