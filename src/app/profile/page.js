@@ -100,7 +100,7 @@ function ProfileContent() {
                                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
                                     <div>
                                         <p className="text-sm text-gray-500 mb-1 group-hover:text-gray-900 transition-colors">
-                                            Order #{order.id.slice(0, 8).toUpperCase()} • {new Date(order.createdAt).toLocaleDateString()}
+                                            Order #{order.id.slice(0, 8).toUpperCase()} • {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'Recent'}
                                         </p>
                                         <div className="flex gap-2">
                                             <span className={`text-xs px-2 py-1 rounded bg-stone-100 text-stone-600 uppercase tracking-wider`}>

@@ -203,15 +203,16 @@ export async function getUserOrders(email, userId = null) {
     const results = new Map();
 
     // Query 1: By customerEmail (legacy orders + form email)
+    // No orderBy — avoids composite index requirement
     try {
-        const q1 = query(ordersCol, where("customerEmail", "==", email), orderBy("createdAt", "desc"));
+        const q1 = query(ordersCol, where("customerEmail", "==", email));
         const snap1 = await getDocs(q1);
         snap1.docs.forEach(d => results.set(d.id, { id: d.id, ...d.data(), createdAt: safeToMillis(d.data().createdAt) }));
     } catch (e) { console.error("getUserOrders q1:", e); }
 
     // Query 2: By userEmail (Google account email stored at checkout)
     try {
-        const q2 = query(ordersCol, where("userEmail", "==", email), orderBy("createdAt", "desc"));
+        const q2 = query(ordersCol, where("userEmail", "==", email));
         const snap2 = await getDocs(q2);
         snap2.docs.forEach(d => results.set(d.id, { id: d.id, ...d.data(), createdAt: safeToMillis(d.data().createdAt) }));
     } catch (e) { console.error("getUserOrders q2:", e); }
@@ -219,12 +220,12 @@ export async function getUserOrders(email, userId = null) {
     // Query 3: By userId (most reliable for authenticated users)
     if (userId) {
         try {
-            const q3 = query(ordersCol, where("userId", "==", userId), orderBy("createdAt", "desc"));
+            const q3 = query(ordersCol, where("userId", "==", userId));
             const snap3 = await getDocs(q3);
             snap3.docs.forEach(d => results.set(d.id, { id: d.id, ...d.data(), createdAt: safeToMillis(d.data().createdAt) }));
         } catch (e) { console.error("getUserOrders q3:", e); }
     }
 
-    // De-duplicate and sort by date desc
+    // De-duplicate and sort by date desc (client-side)
     return Array.from(results.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
