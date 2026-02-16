@@ -31,7 +31,7 @@ export async function POST(request) {
                 order_currency: 'INR',
                 order_id: orderId,
                 customer_details: {
-                    customer_id: customerEmail || `cust_${Date.now()}`,
+                    customer_id: (customerEmail || `cust_${Date.now()}`).replace(/[^a-zA-Z0-9_\-]/g, '_'),
                     customer_name: customerName || 'Guest',
                     customer_email: customerEmail,
                     customer_phone: customerPhone || '9999999999',

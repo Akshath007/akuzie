@@ -13,18 +13,49 @@ function PaymentSuccessContent() {
     const [status, setStatus] = useState('processing'); // processing, success, error
 
     useEffect(() => {
-        // Get order ID from URL parameters
-        const orderId = searchParams.get('orderId');
-        const checkoutId = searchParams.get('checkout_id');
+        const verifyPayment = async () => {
+            // Get order ID from URL parameters
+            const orderId = searchParams.get('orderId');
+            const checkoutId = searchParams.get('checkout_id');
 
-        if (!orderId && !checkoutId) {
-            setStatus('error');
-            return;
-        }
+            if (!orderId && !checkoutId) {
+                setStatus('error');
+                return;
+            }
 
-        // Clear the cart since payment was successful
-        clearCart();
-        setStatus('success');
+            // Determine which ID to use and capture all params
+            const idToVerify = orderId || checkoutId;
+            const allParams = {};
+            searchParams.forEach((value, key) => {
+                allParams[key] = value;
+            });
+
+            try {
+                const res = await fetch('/api/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId: idToVerify,
+                        ...allParams // Pass everything Shiprocket might have sent
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    clearCart();
+                    setStatus('success');
+                } else {
+                    console.error("Payment verification failed:", data.status);
+                    setStatus('error');
+                }
+            } catch (err) {
+                console.error("Verification error:", err);
+                setStatus('error');
+            }
+        };
+
+        verifyPayment();
     }, [searchParams, clearCart]);
 
     if (status === 'processing') {

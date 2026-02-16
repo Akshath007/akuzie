@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
 import { Loader2, QrCode } from 'lucide-react';
 import Link from 'next/link';
-import { load } from '@cashfreepayments/cashfree-js';
+
 
 export default function CheckoutPage() {
     const { cart, clearCart } = useCart();
@@ -51,7 +51,8 @@ export default function CheckoutPage() {
         setStep(2);
     };
 
-    const handlePaymentComplete = async () => {
+    const handlePaymentComplete = async (event) => {
+        if (event) event.preventDefault();
         setLoading(true);
         try {
             const orderData = {
@@ -59,45 +60,55 @@ export default function CheckoutPage() {
                 customerEmail: formData.email,
                 phone: formData.phone,
                 address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
-                items: cart.map(item => ({ id: item.id, title: item.title, price: item.price })),
+                pincode: formData.postalCode,
+                items: cart.map(item => ({ id: item.id, title: item.title, price: item.price, images: item.images || [], medium: item.medium || '' })),
                 totalAmount: total,
+                paymentStatus: 'pending',
+                method: 'shiprocket_online',
+                userId: user?.uid || null,
+                userEmail: user?.email || formData.email,
             };
-
             const paintingIds = cart.map(item => item.id);
+
+            // 1. Check availability
+            const availabilityChecks = await Promise.all(paintingIds.map(id => getPainting(id)));
+            const soldItems = availabilityChecks.filter(p => !p || p.status === 'sold');
+
+            if (soldItems.length > 0) {
+                alert("Sorry, one or more items in your cart were just purchased by someone else.");
+                router.push('/cart');
+                return;
+            }
+
+            // 2. Create local order
             const orderId = await processOrder(orderData, paintingIds);
 
-            // Create Cashfree order via our API route
-            const response = await fetch('/api/checkout', {
+            // 3. Generate Shiprocket Token
+            const response = await fetch('/api/shiprocket-token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     orderId,
-                    customerName: formData.name,
-                    customerEmail: formData.email,
-                    customerPhone: formData.phone,
                     amount: total,
-                    items: cart.map(item => ({
-                        name: item.title,
-                        price: item.price
-                    }))
-                }),
+                    items: cart.map(item => ({ id: item.id, name: item.title, price: item.price }))
+                })
             });
-
             const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to create payment session');
+            if (!data.token) {
+                throw new Error(data.error || 'Failed to generate payment token');
             }
 
-            // Load Cashfree JS SDK and launch checkout
-            const cashfree = await load({
-                mode: process.env.NEXT_PUBLIC_CASHFREE_MODE || 'sandbox',
-            });
-
-            cashfree.checkout({
-                paymentSessionId: data.payment_session_id,
-                redirectTarget: '_self',
-            });
+            // 4. Trigger Shiprocket Checkout
+            if (window.HeadlessCheckout) {
+                window.HeadlessCheckout.addToCart(event, data.token, {
+                    fallbackUrl: `${window.location.origin}/checkout/manual-payment?orderId=${orderId}`
+                });
+            } else {
+                console.error("Shiprocket script not loaded");
+                alert("Payment gateway failed to load. Redirecting to manual payment.");
+                router.push(`/checkout/manual-payment?orderId=${orderId}`);
+            }
 
         } catch (error) {
             console.error("Payment initiation failed", error);
@@ -110,6 +121,11 @@ export default function CheckoutPage() {
     return (
         <div className="max-w-3xl mx-auto px-6 pt-32 pb-20">
             <div className="mb-16">
+                <link rel="stylesheet" href="https://checkout-ui.shiprocket.com/assets/styles/shopify.css" />
+                <script src="https://checkout-ui.shiprocket.com/assets/js/channels/shopify.js" async></script>
+                {/* Hidden input required by Shiprocket script */}
+                <input type="hidden" value="akuzie.in" id="sellerDomain" />
+
                 <div className="flex items-center justify-between text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] text-gray-400 mb-6">
                     <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
                         <span className={step === 1 ? "text-gray-900 font-bold" : ""}>01.</span>
@@ -241,7 +257,23 @@ export default function CheckoutPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-6">
+
+                    <button
+                        onClick={handlePaymentComplete}
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-5 rounded-2xl text-sm font-bold uppercase tracking-[0.2em] shadow-xl shadow-violet-200 hover:shadow-violet-300 hover:scale-[1.01] transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
+                    >
+                        {loading ? (
+                            <Loader2 size={20} className="animate-spin" />
+                        ) : (
+                            <>
+                                Proceed to Secure Payment
+                            </>
+                        )}
+                    </button>
+
+                    {/* Hidden Manual Payment Option (Backup) */}
+                    <div className="pt-4 border-t border-gray-100">
                         <button
                             onClick={async () => {
                                 setLoading(true);
@@ -260,13 +292,11 @@ export default function CheckoutPage() {
                                         userEmail: user?.email || formData.email,
                                     };
                                     const paintingIds = cart.map(item => item.id);
-
-                                    // Final safety check: ensure none of the items were sold in the last few seconds
                                     const availabilityChecks = await Promise.all(paintingIds.map(id => getPainting(id)));
                                     const soldItems = availabilityChecks.filter(p => !p || p.status === 'sold');
 
                                     if (soldItems.length > 0) {
-                                        alert("Sorry, one or more items in your cart were just purchased by someone else. You will be redirected to the cart to update your order.");
+                                        alert("Sorry, one or more items in your cart were just purchased by someone else.");
                                         router.push('/cart');
                                         return;
                                     }
@@ -279,27 +309,19 @@ export default function CheckoutPage() {
                                     setLoading(false);
                                 }
                             }}
-                            disabled={loading}
-                            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-5 rounded-2xl text-sm font-bold uppercase tracking-[0.2em] shadow-xl shadow-violet-200 hover:shadow-violet-300 hover:scale-[1.01] transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
+                            className="w-full text-gray-500 text-xs hover:text-gray-900 underline"
                         >
-                            {loading ? (
-                                <Loader2 size={20} className="animate-spin" />
-                            ) : (
-                                <>
-                                    <QrCode size={20} />
-                                    Proceed to UPI Payment
-                                </>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setStep(1)}
-                            disabled={loading}
-                            className="w-full text-gray-400 py-2 text-[10px] uppercase tracking-widest hover:text-gray-900 transition-colors disabled:opacity-50 font-bold"
-                        >
-                            ← Edit Shipping Details
+                            Having trouble? Pay via Manual UPI Scan
                         </button>
                     </div>
+
+                    <button
+                        onClick={() => setStep(1)}
+                        disabled={loading}
+                        className="w-full text-gray-400 py-2 text-[10px] uppercase tracking-widest hover:text-gray-900 transition-colors disabled:opacity-50 font-bold"
+                    >
+                        ← Edit Shipping Details
+                    </button>
                 </div>
             )}
         </div>
