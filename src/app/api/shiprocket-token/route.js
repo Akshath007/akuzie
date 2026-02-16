@@ -45,7 +45,7 @@ export async function POST(req) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Api-Key': `Bearer ${apiKey}`,
+                'X-Api-Key': apiKey,
                 'X-Api-HMAC-SHA256': signature
             },
             body: bodyString
