@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
+function safeDate(val) {
+    if (!val) return new Date().toISOString();
+    if (val.toDate) return val.toDate().toISOString(); // Firestore Timestamp
+    if (val.seconds) return new Date(val.seconds * 1000).toISOString(); // Firestore Timestamp object
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+}
+
 // Shiprocket Catalog Sync API - Fetch All Products
 // GET /api/shiprocket/products?page=1&limit=100
 export async function GET(req) {
@@ -31,9 +39,7 @@ export async function GET(req) {
             body_html: `<p>${item.description || item.medium || 'Original artwork by Akuzie'}</p>`,
             vendor: 'Akuzie',
             product_type: item.category || 'painting',
-            updated_at: item.createdAt
-                ? new Date(item.createdAt).toISOString()
-                : new Date().toISOString(),
+            updated_at: safeDate(item.createdAt),
             status: item.status === 'sold' ? 'draft' : 'active',
             variants: [
                 {
@@ -42,9 +48,7 @@ export async function GET(req) {
                     price: String(item.price || '0'),
                     quantity: item.status === 'sold' ? 0 : 1,
                     sku: `AKZ-${item.id}`,
-                    updated_at: item.createdAt
-                        ? new Date(item.createdAt).toISOString()
-                        : new Date().toISOString(),
+                    updated_at: safeDate(item.createdAt),
                     image: {
                         src: (item.images && item.images.length > 0)
                             ? item.images[0]
