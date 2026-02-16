@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
@@ -10,67 +9,84 @@ export async function POST(req) {
         const secretKey = process.env.SHIPROCKET_CHECKOUT_SECRET_KEY;
 
         if (!apiKey || !secretKey) {
+            console.error("Missing Shiprocket credentials in .env.local");
             return NextResponse.json({ error: 'Shiprocket credentials missing' }, { status: 500 });
         }
 
         const timestamp = new Date().toISOString();
 
-        // The documentation says HMAC SHA256 using secret key and request body.
-        // However, usually GET requests sign query params or timestamp. 
-        // The example provided shows data being sent in body.
-
-        // We need to map our cart items to Shiprocket's expected format.
-        // NOTE: In a real "Headless" flow, products are usually synced beforehand 
-        // and we pass variant_id. Since we might not have synced catalog, 
-        // we'll try to pass ad-hoc items if supported, otherwise we might see an error
-        // "Variant not found" if Shiprocket expects pre-synced items.
-        // Based on the doc, it expects "variant_id". 
-        // Since we are a custom website without a sync, we might need to use 
-        // SKU as variant_id if we did the sync, or hope it accepts descriptive items.
-
-        // ASSUMPTION: You have synced your products or Shiprocket allows ad-hoc items.
-        // If not, this step will fail with "Invalid Variant".
-        // For now, we pass our item ID as variant_id.
-        const cartData = {
+        // Build the request body exactly as per Shiprocket docs
+        const requestBody = {
             cart_data: {
                 items: items.map(item => ({
-                    variant_id: item.id.toString(), // Ensure string
-                    quantity: 1,
-                    // optional fields if supported by ad-hoc
-                    title: item.name,
-                    price: item.price
+                    variant_id: item.id.toString(),
+                    quantity: 1
                 }))
             },
-            redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?order_id=${orderId}`,
+            redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?orderId=${orderId}`,
             timestamp: timestamp
         };
 
+        const bodyString = JSON.stringify(requestBody);
+
+        // HMAC SHA256 signature using secret key and the JSON body string
         const signature = crypto
             .createHmac('sha256', secretKey)
-            .update(JSON.stringify(cartData))
+            .update(bodyString)
             .digest('base64');
+
+        console.log("=== Shiprocket Token Request ===");
+        console.log("URL:", 'https://checkout-api.shiprocket.com/api/v1/access-token/checkout');
+        console.log("Body:", bodyString);
+        console.log("HMAC Signature:", signature);
+        console.log("API Key:", apiKey);
 
         const response = await fetch('https://checkout-api.shiprocket.com/api/v1/access-token/checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Api-Key': apiKey,
+                'X-Api-Key': `Bearer ${apiKey}`,
                 'X-Api-HMAC-SHA256': signature
             },
-            body: JSON.stringify(cartData)
+            body: bodyString
         });
 
-        const result = await response.json();
+        const responseText = await response.text();
+        console.log("=== Shiprocket Token Response ===");
+        console.log("Status:", response.status);
+        console.log("Body:", responseText);
+
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (e) {
+            console.error("Failed to parse Shiprocket response:", responseText);
+            return NextResponse.json({ error: 'Invalid response from payment gateway' }, { status: 502 });
+        }
 
         if (!response.ok) {
             console.error("Shiprocket Token Error:", result);
-            return NextResponse.json({ error: result.message || 'Failed to generate token' }, { status: response.status });
+            return NextResponse.json({
+                error: result.message || result.error || 'Failed to generate token',
+                details: result
+            }, { status: response.status });
         }
 
-        return NextResponse.json({ token: result.token });
+        // The token might be at result.token or result.result.token
+        const token = result.token || result?.result?.token;
+
+        if (!token) {
+            console.error("No token in Shiprocket response:", result);
+            return NextResponse.json({
+                error: 'No token received from payment gateway',
+                details: result
+            }, { status: 500 });
+        }
+
+        return NextResponse.json({ token });
 
     } catch (error) {
         console.error("Shiprocket API Error:", error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error: ' + error.message }, { status: 500 });
     }
 }
