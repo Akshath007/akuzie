@@ -65,15 +65,17 @@ export default function CartPage() {
             if (confirm("Please login with Google to continue.")) {
                 try {
                     await loginWithGoogle();
+                    // If login succeeds, proceed to checkout
+                    router.push('/checkout');
                 } catch (e) {
+                    // If user cancels or error, stay here
                     return;
                 }
-            } else {
-                return;
             }
-        } else {
-            router.push('/checkout');
+            return;
         }
+
+        router.push('/checkout');
     };
 
     if (cart.length === 0) {
@@ -169,10 +171,10 @@ export default function CartPage() {
                     onClick={handleCheckout}
                     disabled={hasSoldItems || (verifying && cart.length > 0)}
                     className={`flex items-center justify-center gap-4 w-full md:w-auto md:min-w-[300px] py-4 px-8 text-xs uppercase tracking-[0.2em] transition-all shadow-lg font-bold ${hasSoldItems
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                            : (verifying && cart.length > 0)
-                                ? 'bg-gray-800 text-white opacity-70 animate-pulse'
-                                : 'bg-gray-900 text-white hover:bg-gray-800 hover:-translate-y-1 hover:shadow-xl'
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                        : (verifying && cart.length > 0)
+                            ? 'bg-gray-800 text-white opacity-70 animate-pulse'
+                            : 'bg-gray-900 text-white hover:bg-gray-800 hover:-translate-y-1 hover:shadow-xl'
                         }`}
                 >
                     {verifying && cart.length > 0 ? 'Verifying Availability...' : (

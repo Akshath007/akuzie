@@ -15,68 +15,101 @@ export default async function Image() {
         (
             <div
                 style={{
-                    background: 'white',
+                    background: 'linear-gradient(to bottom, #0a0a0a, #1a1a1a)',
                     width: '100%',
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontFamily: 'serif',
-                    position: 'relative',
+                    fontFamily: 'sans-serif',
                 }}
             >
+                {/* Background Decoration */}
                 <div
                     style={{
                         position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundImage: 'radial-gradient(circle at 25px 25px, #e5e7eb 2%, transparent 0%), radial-gradient(circle at 75px 75px, #e5e7eb 2%, transparent 0%)',
-                        backgroundSize: '100px 100px',
-                        opacity: 0.3,
+                        top: '-20%',
+                        left: '-10%',
+                        width: '600px',
+                        height: '600px',
+                        background: '#7c3aed',
+                        borderRadius: '50%',
+                        filter: 'blur(120px)',
+                        opacity: 0.2,
                     }}
                 />
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                    {/* Logo or Icon Representation */}
-                    <div style={{
-                        width: '80px',
-                        height: '80px',
-                        background: 'black',
+                <div
+                    style={{
+                        position: 'absolute',
+                        bottom: '-10%',
+                        right: '-10%',
+                        width: '500px',
+                        height: '500px',
+                        background: '#2563eb',
                         borderRadius: '50%',
+                        filter: 'blur(100px)',
+                        opacity: 0.15,
+                    }}
+                />
+
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '20px',
+                        zIndex: 10,
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: 120,
+                            fontWeight: 800,
+                            background: 'linear-gradient(to bottom, #ffffff, #a1a1aa)',
+                            backgroundClip: 'text',
+                            color: 'transparent',
+                            marginBottom: 0,
+                            letterSpacing: '-0.05em',
+                            lineHeight: 1,
+                        }}
+                    >
+                        Akuzie
+                    </div>
+                    <div
+                        style={{
+                            fontSize: 32,
+                            fontWeight: 300,
+                            color: '#e4e4e7', // zinc-200
+                            letterSpacing: '0.05em',
+                            fontStyle: 'italic',
+                            fontFamily: 'serif',
+                            opacity: 0.9,
+                        }}
+                    >
+                        Where Everything Hits Different
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        position: 'absolute',
+                        bottom: 40,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '40px',
-                        fontWeight: 'bold',
-                        fontFamily: 'sans-serif'
-                    }}>
-                        A
-                    </div>
-                </div>
-                <div
-                    style={{
-                        fontSize: 80,
-                        fontWeight: 'bold',
-                        color: 'black',
-                        marginBottom: 20,
-                        letterSpacing: '-2px',
+                        gap: '12px',
+                        color: '#71717a', // zinc-500
+                        fontSize: 16,
+                        letterSpacing: '0.2em',
+                        textTransform: 'uppercase',
                     }}
                 >
-                    Akuzie
-                </div>
-                <div
-                    style={{
-                        fontSize: 32,
-                        color: '#52525b',
-                        maxWidth: '80%',
-                        textAlign: 'center',
-                        lineHeight: 1.4,
-                    }}
-                >
-                    Where Everything Hits Different
+                    <span>Art</span>
+                    <span>•</span>
+                    <span>Auctions</span>
+                    <span>•</span>
+                    <span>Crochet</span>
                 </div>
             </div>
         ),

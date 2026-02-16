@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getOrders, updateOrderStatus, deleteOrder } from '@/lib/data';
+import { getOrders, updateOrderStatus, deleteOrder, safeToMillis } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice, ORDER_STATUS, cn } from '@/lib/utils';
 import { ExternalLink, Calendar, User, Package, CreditCard, Trash2, X, MapPin, CheckCircle } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         const data = await getOrders();
         // sort by date desc
-        data.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+        data.sort((a, b) => safeToMillis(b.createdAt) - safeToMillis(a.createdAt));
         setOrders(data);
         setLoading(false);
     };

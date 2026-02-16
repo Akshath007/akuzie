@@ -33,6 +33,7 @@ export default async function PaintingPage({ params }) {
     const allPaintings = await getPaintings();
     const relatedPaintings = allPaintings
         .filter(p => p.id !== painting.id && p.status === PAINTING_STATUS.AVAILABLE)
+        .sort(() => 0.5 - Math.random()) // Random shuffle
         .slice(0, 3);
 
     const isSold = painting.status === PAINTING_STATUS.SOLD;

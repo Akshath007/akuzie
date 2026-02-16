@@ -2,7 +2,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { PAINTING_STATUS, ORDER_STATUS } from "./utils";
 
-const safeToMillis = (dateValue) => {
+export const safeToMillis = (dateValue) => {
     if (!dateValue) return null;
     if (typeof dateValue.toMillis === 'function') return dateValue.toMillis();
     if (typeof dateValue.toDate === 'function') return dateValue.toDate().getTime();

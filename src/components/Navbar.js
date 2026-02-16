@@ -85,10 +85,11 @@ export default function Navbar() {
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
                                 className={cn("focus:outline-none", textColorClass)}
+                                aria-label="Toggle Menu"
                             >
                                 {isOpen ? <X size={24} strokeWidth={1} /> : <Menu size={24} strokeWidth={1} />}
                             </button>
-                            <button onClick={() => setShowSearch(!showSearch)} className={textColorClass}>
+                            <button onClick={() => setShowSearch(!showSearch)} className={textColorClass} aria-label="Search">
                                 <Search size={20} strokeWidth={1.5} />
                             </button>
                         </div>
@@ -145,6 +146,7 @@ export default function Navbar() {
                             <button
                                 onClick={() => setShowSearch(!showSearch)}
                                 className={cn("transition-colors", textColorClass, showSearch && "opacity-0 pointer-events-none")}
+                                aria-label="Search"
                             >
                                 <Search size={20} strokeWidth={1.5} />
                             </button>
@@ -186,7 +188,7 @@ export default function Navbar() {
 
                         {/* Mobile Right: Cart & Profile */}
                         <div className="md:hidden flex items-center gap-4 z-50">
-                            <Link href="/cart" className={cn("relative", textColorClass)}>
+                            <Link href="/cart" className={cn("relative", textColorClass)} aria-label="Cart">
                                 <ShoppingBag size={20} strokeWidth={1.5} />
                                 {cart.length > 0 && (
                                     <span className={cn("absolute -top-1 -right-1 h-2 w-2 rounded-full", isTransparent ? "bg-white" : "bg-stone-800")}></span>
@@ -194,7 +196,7 @@ export default function Navbar() {
                             </Link>
 
                             {user ? (
-                                <Link href="/profile" className={cn("w-6 h-6 rounded-full overflow-hidden border", isTransparent ? "border-white/50" : "border-stone-200")}>
+                                <Link href="/profile" className={cn("w-6 h-6 rounded-full overflow-hidden border", isTransparent ? "border-white/50" : "border-stone-200")} aria-label="Profile">
                                     {user.photoURL ? (
                                         <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                                     ) : (
@@ -204,7 +206,7 @@ export default function Navbar() {
                                     )}
                                 </Link>
                             ) : (
-                                <Link href="/login" className={textColorClass}>
+                                <Link href="/login" className={textColorClass} aria-label="Login">
                                     <User size={20} strokeWidth={1.5} />
                                 </Link>
                             )}
@@ -257,14 +259,6 @@ export default function Navbar() {
                     )}
 
                 </div>
-
-
-                <button
-                    onClick={() => setIsOpen(false)}
-                    className="mt-12 p-4 rounded-full bg-stone-100 text-gray-900 hover:bg-stone-200 transition-colors"
-                >
-                    <X size={24} strokeWidth={1} />
-                </button>
             </div>
 
         </>
