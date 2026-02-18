@@ -65,11 +65,13 @@ export async function GET(req) {
         }));
 
         return NextResponse.json({
-            products: products,
-            page: page,
-            limit: limit,
-            total: allItems.length,
-            has_more: end < allItems.length
+            data: {
+                products: products,
+                page: page,
+                limit: limit,
+                total: allItems.length,
+                has_more: end < allItems.length
+            }
         });
 
     } catch (error) {

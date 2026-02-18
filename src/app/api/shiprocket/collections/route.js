@@ -35,11 +35,13 @@ export async function GET(req) {
         const paginatedCollections = allCollections.slice(start, end);
 
         return NextResponse.json({
-            collections: paginatedCollections,
-            page: page,
-            limit: limit,
-            total: allCollections.length,
-            has_more: end < allCollections.length
+            data: {
+                collections: paginatedCollections,
+                page: page,
+                limit: limit,
+                total: allCollections.length,
+                has_more: end < allCollections.length
+            }
         });
 
     } catch (error) {

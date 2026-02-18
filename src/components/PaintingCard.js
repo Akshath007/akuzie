@@ -48,9 +48,7 @@ export default function PaintingCard({ painting }) {
                                 <span className="hidden md:inline-block opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 bg-violet-600 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold text-white shadow-lg">
                                     Collector's Item
                                 </span>
-                                <span className="w-fit bg-white/80 backdrop-blur-md px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] uppercase tracking-widest font-bold text-gray-900 border border-white/40">
-                                    Original
-                                </span>
+
                             </div>
                         )}
                     </div>
