@@ -179,13 +179,25 @@ export async function getAuction(id) {
 
 // --- HELPER: Get Bids for an Auction ---
 export async function getBids(auctionId) {
-    const q = query(bidsRef, where("auctionId", "==", auctionId), orderBy("amount", "desc")); // Highest first
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: safeToMillis(doc.data().timestamp)
-    }));
+    try {
+        const q = query(bidsRef, where("auctionId", "==", auctionId), orderBy("amount", "desc")); // Highest first
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: safeToMillis(doc.data().timestamp)
+        }));
+    } catch (error) {
+        // Fallback: Query by ID only, sort in memory
+        const q = query(bidsRef, where("auctionId", "==", auctionId));
+        const snapshot = await getDocs(q);
+        const bids = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: safeToMillis(doc.data().timestamp)
+        }));
+        return bids.sort((a, b) => b.amount - a.amount);
+    }
 }
 
 // --- HELPER: Delete Auction and its Bids ---
@@ -235,18 +247,28 @@ export async function passToNextBidder(auctionId) {
         }
 
         // Fetch all bids for this auction, sorted by amount descending (highest first)
-        const bidsQuery = query(
-            bidsRef,
-            where("auctionId", "==", auctionId),
-            orderBy("amount", "desc")
-        );
-        const bidsSnapshot = await getDocs(bidsQuery);
+        let bidsDocs;
+        try {
+            const bidsQuery = query(
+                bidsRef,
+                where("auctionId", "==", auctionId),
+                orderBy("amount", "desc")
+            );
+            const bidsSnapshot = await getDocs(bidsQuery);
+            bidsDocs = bidsSnapshot.docs;
+        } catch (error) {
+            // Fallback: Query by ID only, sort in memory
+            const bidsQuery = query(bidsRef, where("auctionId", "==", auctionId));
+            const bidsSnapshot = await getDocs(bidsQuery);
+            bidsDocs = bidsSnapshot.docs.sort((a, b) => b.data().amount - a.data().amount);
+        }
 
         // Find the next eligible bidder (unique users, not already skipped)
         let nextWinner = null;
         const seenUsers = new Set();
 
-        for (const bidDoc of bidsSnapshot.docs) {
+        // Loop over the docs array (which we ensured is populated and sorted)
+        for (const bidDoc of bidsDocs) {
             const bid = bidDoc.data();
             // Skip if we've already seen this user (they may have multiple bids)
             if (seenUsers.has(bid.userId)) continue;

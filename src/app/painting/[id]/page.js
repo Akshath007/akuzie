@@ -46,11 +46,11 @@ export default async function PaintingPage({ params }) {
                 <ArrowLeft size={14} /> Back to Archive
             </Link>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-24 mb-32">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 mb-16">
 
-                {/* Left: Image (Sticky) */}
-                <div className="lg:col-span-7 xl:col-span-8">
-                    <div className="sticky top-32 space-y-4">
+                {/* Left: Image (Sticky) - Amazon style often gives more width to image on desktop */}
+                <div className="lg:col-span-7 xl:col-span-7">
+                    <div className="sticky top-24">
                         <ImageGallery
                             images={painting.images}
                             title={painting.title}
@@ -60,7 +60,7 @@ export default async function PaintingPage({ params }) {
                 </div>
 
                 {/* Right: Details */}
-                <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-start lg:py-12 fade-in delay-200">
+                <div className="lg:col-span-5 xl:col-span-5 flex flex-col justify-start lg:py-4 fade-in delay-200">
 
                     <div className="border-b border-stone-200 pb-8 mb-8">
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-gray-900 leading-tight mb-4">

@@ -66,25 +66,7 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-serif text-gray-900">Admin Dashboard</h1>
-                    <p className="text-gray-500">Manage your gallery and orders.</p>
-                </div>
-                <div className="flex bg-white p-1.5 rounded-full border border-gray-100 shadow-sm gap-1 overflow-x-auto">
-                    <Link href="/akshath/logs" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
-                        <ClipboardList size={16} />
-                        Activity Logs
-                    </Link>
-                    <Link href="/akshath/orders" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
-                        <ShoppingBag size={16} />
-                        Orders
-                    </Link>
-                    <Link href="/akshath/dashboard/analytics" className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap">
-                        <Users size={16} />
-                        Analytics
-                    </Link>
-                    <Link href="/akshath/add" className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-full hover:bg-violet-700 transition-colors shadow-md shadow-violet-200 text-sm font-medium whitespace-nowrap">
-                        <Plus size={16} />
-                        New Art
-                    </Link>
+                    <p className="text-gray-500">Overview of your gallery performance.</p>
                 </div>
             </div>
 
@@ -110,83 +92,9 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* INVENTORY SECTION */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-serif text-gray-900">Inventory</h2>
-                    <div className="flex bg-gray-100 rounded-lg p-1">
-                        {['all', 'painting', 'crochet'].map((f) => (
-                            <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={cn(
-                                    "px-4 py-1.5 rounded-md text-xs font-medium uppercase tracking-wider transition-all",
-                                    filter === f ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                                )}
-                            >
-                                {f}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                                <th className="pb-4 pl-4 font-medium">Artwork</th>
-                                <th className="pb-4 font-medium">Status</th>
-                                <th className="pb-4 font-medium">Price</th>
-                                <th className="pb-4 pr-4 text-right font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                            {filteredItems.map((painting) => (
-                                <tr key={painting.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0 white-space-nowrap">
-                                    <td className="py-4 pl-4 min-w-[200px]">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative w-12 h-16 rounded-lg overflow-hidden bg-gray-100 shadow-sm flex-shrink-0">
-                                                {painting.images?.[0] ? (
-                                                    <Image src={painting.images[0]} alt="" fill className="object-cover" />
-                                                ) : <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={16} /></div>}
-                                            </div>
-                                            <div>
-                                                <p className="font-serif text-gray-900 font-medium truncate max-w-[150px]">{painting.title}</p>
-                                                <p className="text-xs text-gray-400 truncate">{painting.category === 'crochet' ? 'Crochet' : painting.medium}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-4">
-                                        <button
-                                            onClick={() => toggleStatus(painting)}
-                                            className={cn(
-                                                "px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all hover:scale-105 whitespace-nowrap",
-                                                painting.status === PAINTING_STATUS.AVAILABLE
-                                                    ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
-                                                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                            )}
-                                        >
-                                            {painting.status}
-                                        </button>
-                                    </td>
-                                    <td className="py-4 font-medium text-gray-600 font-sans whitespace-nowrap">
-                                        {formatPrice(painting.price)}
-                                    </td>
-                                    <td className="py-4 pr-4 text-right whitespace-nowrap">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Link href={`/akshath/edit/${painting.id}`} className="p-2 bg-white border border-gray-200 rounded-full hover:border-violet-300 hover:text-violet-600 transition-colors shadow-sm">
-                                                <Edit size={14} />
-                                            </Link>
-                                            <button onClick={() => handleDelete(painting.id)} className="p-2 bg-white border border-gray-200 rounded-full hover:border-red-300 hover:text-red-500 transition-colors shadow-sm">
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Recent Activity or Empty State could go here, but for now just Stats as requested */}
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 text-center">
+                <p className="text-gray-400 italic">Select "Inventory" or "Orders" from the sidebar to manage content.</p>
             </div>
         </div>
     );

@@ -52,18 +52,6 @@ export default function Hero() {
             {/* --- Main Content --- */}
             <div className="relative z-20 max-w-5xl mx-auto px-6 text-center text-white">
 
-                {/* Subtle eyebrow text */}
-                <motion.div
-                    custom={0}
-                    initial="hidden"
-                    animate="visible"
-                    variants={fadeIn}
-                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-8"
-                >
-                    <Sparkles size={14} className="text-violet-400" />
-                    <span className="text-xs uppercase tracking-widest font-medium text-gray-300">The Future is Handmade</span>
-                </motion.div>
-
                 {/* Headline */}
                 <motion.h1
                     custom={1}
@@ -76,7 +64,7 @@ export default function Hero() {
                         Akuzie
                     </span>
                     <span className="block text-2xl md:text-4xl font-light text-gray-400 mt-2 font-serif italic">
-                        | Where Everything Hits Different
+                        Where Everything Hits Different
                     </span>
                 </motion.h1>
 
