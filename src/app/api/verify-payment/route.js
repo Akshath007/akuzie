@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { markItemsAsSold } from '@/lib/data';
+import { templates } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(req) {
@@ -98,6 +99,21 @@ export async function POST(req) {
             });
 
             await markItemsAsSold(orderId);
+
+            // Trigger Confirmation Email
+            try {
+                await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: currentOrderData.customerEmail,
+                        subject: `Order Confirmed: #${orderId.slice(-6).toUpperCase()}`,
+                        html: templates.orderConfirmed({ id: orderId, ...currentOrderData })
+                    })
+                });
+            } catch (emailErr) {
+                console.error("Failed to send confirmation email:", emailErr);
+            }
 
             // Try to create Shipping Order (if Shiprocket Checkout doesn't do it)
             // Note: Shiprocket Checkout usually creates the order in Shiprocket panel automatically.

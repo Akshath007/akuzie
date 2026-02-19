@@ -5,17 +5,40 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { sendEmail, templates } from '@/lib/email';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Fetch extra user data from Firestore (specifically status)
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    if (data.status === 'blocked') {
+                        await signOut(auth);
+                        setUser(null);
+                        setUserData(null);
+                        alert("Your account has been blocked. Please contact support.");
+                        setLoading(false);
+                        return;
+                    }
+                    setUserData(data);
+                }
+                setUser(user);
+            } else {
+                setUser(null);
+                setUserData(null);
+            }
             setLoading(false);
         });
         return () => unsubscribe();
@@ -35,6 +58,13 @@ export function AuthProvider({ children }) {
                     photoURL: user.photoURL || '',
                     createdAt: serverTimestamp(),
                     lastLoginAt: serverTimestamp(),
+                });
+
+                // Trigger Welcome Email
+                sendEmail({
+                    to: user.email,
+                    subject: "Welcome to Akuzie!",
+                    html: templates.welcome(user.displayName)
                 });
             } else {
                 await setDoc(userRef, {

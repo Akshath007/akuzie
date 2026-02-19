@@ -8,6 +8,7 @@ import { Upload, CheckCircle2, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { markItemsAsSold } from '@/lib/data';
+import { sendEmail, templates } from '@/lib/email';
 
 function ManualPaymentContent() {
     const { cart, clearCart } = useCart();
@@ -80,6 +81,15 @@ function ManualPaymentContent() {
 
             // 3. Mark items as SOLD instantly to prevent others from buying
             await markItemsAsSold(orderId);
+
+            // 4. Trigger Confirmation Email
+            if (orderData) {
+                sendEmail({
+                    to: orderData.customerEmail,
+                    subject: `Order Received: #${orderId.slice(-6).toUpperCase()}`,
+                    html: templates.orderConfirmed({ id: orderId, ...orderData })
+                });
+            }
 
             setIsSuccess(true);
             clearCart();

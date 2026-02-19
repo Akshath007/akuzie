@@ -277,3 +277,31 @@ export async function getUserOrders(email, userId = null) {
     // De-duplicate and sort by date desc (client-side)
     return Array.from(results.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
+
+// User Management (Admin)
+export async function getUsers() {
+    const usersCol = collection(db, "users");
+    const snapshot = await getDocs(usersCol);
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: safeToMillis(doc.data().createdAt),
+        lastLoginAt: safeToMillis(doc.data().lastLoginAt),
+    }));
+}
+
+export async function updateUserStatus(uid, status, adminUser) {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, { status: status }); // 'active' or 'blocked'
+    if (adminUser) {
+        await logAdminAction(adminUser, "UPDATE_USER_STATUS", uid, { status });
+    }
+}
+
+export async function deleteUser(uid, adminUser) {
+    await deleteDoc(doc(db, "users", uid));
+    if (adminUser) {
+        await logAdminAction(adminUser, "DELETE_USER", uid);
+    }
+}
+

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, PlusCircle, ShoppingBag, LogOut, TrendingUp, ClipboardList, Gavel, Package, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ShoppingBag, LogOut, TrendingUp, ClipboardList, Gavel, Package, RotateCcw, Users } from 'lucide-react';
 
 export default function AdminGuard({ children }) {
     const { user, loading, logout } = useAuth();
@@ -48,6 +48,9 @@ export default function AdminGuard({ children }) {
                             </Link>
                             <Link href="/akshath/backup" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                                 <RotateCcw size={20} /> Order Backup
+                            </Link>
+                            <Link href="/akshath/users" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                <Users size={20} /> User Management
                             </Link>
                         </>
                     )}
