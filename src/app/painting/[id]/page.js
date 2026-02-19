@@ -9,6 +9,7 @@ import PaintingCard from '@/components/PaintingCard';
 import ImageGallery from '@/components/ImageGallery';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import WishlistButton from '@/components/WishlistButton';
 
 export async function generateMetadata({ params }) {
     const { id } = await params;
@@ -81,12 +82,16 @@ export default async function PaintingPage({ params }) {
                             {painting.description || "An original exploration of color and form. This piece is signed by the artist and comes ready to hang."}
                         </p>
 
-                        <div className="pt-4">
-                            {isSold ? (
-                                <NotifyForm paintingId={painting.id} />
-                            ) : (
-                                <AddToCartButton painting={painting} />
-                            )}
+
+                        <div className="pt-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+                            <div className="flex-grow">
+                                {isSold ? (
+                                    <NotifyForm paintingId={painting.id} />
+                                ) : (
+                                    <AddToCartButton painting={painting} />
+                                )}
+                            </div>
+                            <WishlistButton painting={painting} />
                         </div>
 
                         {/* Accordions */}

@@ -17,6 +17,27 @@ export default function ImageGallery({ images, title, isSold }) {
         setMainIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
+    const [lensProps, setLensProps] = useState({ show: false, x: 0, y: 0, bgX: 0, bgY: 0 });
+
+    const handleMouseMove = (e) => {
+        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+        const x = e.pageX - left - window.scrollX;
+        const y = e.pageY - top - window.scrollY;
+
+        // Calculate lens position (restricted within container)
+        const lensSize = 150;
+        const lX = Math.max(0, Math.min(x - lensSize / 2, width - lensSize));
+        const lY = Math.max(0, Math.min(y - lensSize / 2, height - lensSize));
+
+        // Calculate background position for zoom
+        const bgX = (x / width) * 100;
+        const bgY = (y / height) * 100;
+
+        setLensProps({ show: true, x: lX, y: lY, bgX, bgY });
+    };
+
+    const handleMouseLeave = () => setLensProps({ ...lensProps, show: false });
+
     if (!images || images.length === 0) {
         return (
             <div className="relative aspect-[3/4] md:aspect-[4/5] bg-stone-50 w-full shadow-sm flex items-center justify-center text-stone-300 font-serif italic">
@@ -33,7 +54,7 @@ export default function ImageGallery({ images, title, isSold }) {
                     {images.map((img, idx) => (
                         <button
                             key={idx}
-                            onMouseEnter={() => setMainIndex(idx)} // Amazon style: Hover to switch
+                            onMouseEnter={() => setMainIndex(idx)}
                             onClick={() => setMainIndex(idx)}
                             className={cn(
                                 "relative w-16 h-16 md:w-full md:aspect-square flex-shrink-0 border transition-all duration-200 rounded-md overflow-hidden",
@@ -55,8 +76,12 @@ export default function ImageGallery({ images, title, isSold }) {
             )}
 
             {/* Main Image Area */}
-            <div className="relative flex-grow bg-white rounded-xl overflow-hidden border border-gray-100 group">
-                {/* Image Container with contain/cover handling */}
+            <div
+                className="relative flex-grow bg-white rounded-xl overflow-hidden border border-gray-100 group cursor-crosshair"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+            >
+                {/* Image Container */}
                 <div className="relative w-full h-[50vh] md:h-full min-h-[400px] md:min-h-[500px]">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -78,8 +103,29 @@ export default function ImageGallery({ images, title, isSold }) {
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Zoom/Expand Instruction (Optional overlay) */}
-                    <div className="absolute inset-0 pointer-events-none group-hover:bg-black/5 transition-colors duration-300" />
+                    {/* Magnifier Lens (Desktop Only) */}
+                    <AnimatePresence>
+                        {lensProps.show && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute hidden md:block z-50 pointer-events-none rounded-full border-2 border-white shadow-2xl overflow-hidden bg-white"
+                                style={{
+                                    width: 180,
+                                    height: 180,
+                                    left: lensProps.x,
+                                    top: lensProps.y,
+                                    backgroundImage: `url(${images[mainIndex]})`,
+                                    backgroundSize: '400%',
+                                    backgroundPosition: `${lensProps.bgX}% ${lensProps.bgY}%`,
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                            />
+                        )}
+                    </AnimatePresence>
+
+                    <div className="absolute inset-0 pointer-events-none group-hover:bg-black/[0.02] transition-colors duration-300" />
                 </div>
 
                 {/* Mobile Slide Controls */}

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getPaintings } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
+import Skeleton from '@/components/Skeleton';
 
 function GalleryContent() {
     const [paintings, setPaintings] = useState([]);
@@ -58,9 +59,9 @@ function GalleryContent() {
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-12">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="space-y-4 animate-pulse">
-                                <div className="aspect-[4/5] bg-gray-200"></div>
-                                <div className="h-4 bg-gray-200 w-2/3 mx-auto"></div>
+                            <div key={i} className="space-y-4">
+                                <Skeleton className="aspect-[4/5] rounded-xl md:rounded-3xl" />
+                                <Skeleton className="h-4 w-2/3 mx-auto" />
                             </div>
                         ))}
                     </div>

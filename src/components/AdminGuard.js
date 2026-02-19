@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, PlusCircle, ShoppingBag, LogOut, TrendingUp, ClipboardList, Gavel, Package } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ShoppingBag, LogOut, TrendingUp, ClipboardList, Gavel, Package, RotateCcw } from 'lucide-react';
 
 export default function AdminGuard({ children }) {
     const { user, loading, logout } = useAuth();
@@ -38,12 +38,19 @@ export default function AdminGuard({ children }) {
                         But since they asked for it as a separate section, and Analytics moved... 
                         I'll add the new requested links.
                     */}
-                    <Link href="/akshath/dashboard/analytics" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                        <TrendingUp size={20} /> Analytics
-                    </Link>
-                    <Link href="/akshath/logs" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                        <ClipboardList size={20} /> Activity Logs
-                    </Link>
+                    {user?.email === 'akshathhp123@gmail.com' && (
+                        <>
+                            <Link href="/akshath/dashboard/analytics" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                <TrendingUp size={20} /> Analytics
+                            </Link>
+                            <Link href="/akshath/logs" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                <ClipboardList size={20} /> Activity Logs
+                            </Link>
+                            <Link href="/akshath/backup" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                <RotateCcw size={20} /> Order Backup
+                            </Link>
+                        </>
+                    )}
                     <Link href="/akshath/auctions" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                         <Gavel size={20} /> Auctions
                     </Link>

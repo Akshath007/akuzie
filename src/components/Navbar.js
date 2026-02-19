@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 
-import { ShoppingBag, Menu, X, Search, User } from 'lucide-react';
+import { ShoppingBag, Menu, X, Search, User, Heart } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import Input from './Input';
@@ -19,6 +20,7 @@ export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { cart } = useCart();
+    const { wishlist } = useWishlist();
     const { user, loading } = useAuth();
     const searchInputRef = useRef(null);
 
@@ -172,10 +174,18 @@ export default function Navbar() {
                                 )}
                             </div>
 
-                            <Link href="/cart" className={cn("group relative flex items-center gap-2", textColorClass)}>
-                                <span className={cn("text-xs uppercase tracking-[0.2em] font-medium transition-colors", isTransparent ? "group-hover:text-gray-200" : "group-hover:text-gray-600")}>Cart</span>
+                            <Link href="/wishlist" className={cn("group flex items-center gap-2", textColorClass)} aria-label="Wishlist">
                                 <div className="relative">
-                                    <ShoppingBag size={18} strokeWidth={1.5} />
+                                    <Heart size={20} strokeWidth={1.5} className={wishlist.length > 0 ? "fill-red-500 text-red-500" : ""} />
+                                    {wishlist.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-1.5 w-1.5 rounded-full bg-red-600"></span>
+                                    )}
+                                </div>
+                            </Link>
+
+                            <Link href="/cart" className={cn("group relative flex items-center gap-2", textColorClass)}>
+                                <div className="relative">
+                                    <ShoppingBag size={20} strokeWidth={1.5} />
                                     {cart.length > 0 && (
                                         <span className="absolute -top-1 -right-1 flex h-2 w-2">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stone-400 opacity-75"></span>
@@ -245,6 +255,7 @@ export default function Navbar() {
                     <Link href="/gallery?category=painting" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Art</Link>
                     <Link href="/auctions" className="font-serif text-4xl text-red-600 hover:text-red-700 transition-colors animate-pulse" onClick={() => setIsOpen(false)}>Live Auctions</Link>
                     <Link href="/gallery?category=crochet" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Crochet</Link>
+                    <Link href="/wishlist" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Wishlist ({wishlist.length})</Link>
                     <Link href="/cart" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Cart ({cart.length})</Link>
 
                     {user ? (

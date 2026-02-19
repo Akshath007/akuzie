@@ -9,6 +9,7 @@ import { getPaintings } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
 import { cn, PAINTING_STATUS } from '@/lib/utils';
 import Hero from '@/components/Hero';
+import Skeleton from '@/components/Skeleton';
 
 // --- ANIMATED COMPONENTS ---
 
@@ -110,8 +111,12 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 md:gap-x-12 md:gap-y-24">
             {loading ? (
-              [1, 2, 3, 4].map(i => (
-                <div key={i} className="aspect-[3/4] bg-gray-50 animate-pulse rounded-2xl md:rounded-3xl"></div>
+              [1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="flex flex-col gap-4">
+                  <Skeleton className="aspect-[3/4] rounded-2xl md:rounded-3xl" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
               ))
             ) : (
               paintings.map((p, i) => (

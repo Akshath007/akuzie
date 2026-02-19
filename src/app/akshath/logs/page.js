@@ -6,13 +6,29 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ClipboardList, User, Clock, Tag, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLogsPage() {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Access Control Check
+        if (!authLoading) {
+            if (!user || user.email !== 'akshathhp123@gmail.com') {
+                router.push('/akshath/dashboard');
+                return;
+            }
+        }
+    }, [user, authLoading, router]);
+
+    useEffect(() => {
         async function fetchLogs() {
+            if (!user || user.email !== 'akshathhp123@gmail.com') return;
+
             const logsCol = collection(db, "admin_logs");
             const q = query(logsCol, orderBy("timestamp", "desc"), limit(100));
             const snapshot = await getDocs(q);
@@ -27,10 +43,13 @@ export default function AdminLogsPage() {
             setLogs(logData);
             setLoading(false);
         }
-        fetchLogs();
-    }, []);
 
-    if (loading) return (
+        if (!authLoading && user?.email === 'akshathhp123@gmail.com') {
+            fetchLogs();
+        }
+    }, [user, authLoading]);
+
+    if (authLoading || (loading && user?.email === 'akshathhp123@gmail.com')) return (
         <div className="flex h-[50vh] items-center justify-center">
             <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
         </div>

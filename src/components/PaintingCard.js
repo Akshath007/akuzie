@@ -4,10 +4,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Heart } from 'lucide-react';
+import { useWishlist } from '@/context/WishlistContext';
 
 export default function PaintingCard({ painting }) {
     const isSold = painting.status === PAINTING_STATUS.SOLD;
+    const { isInWishlist, toggleWishlist } = useWishlist();
+
+    const handleWishlist = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleWishlist(painting);
+    };
 
     return (
         <motion.div
@@ -52,6 +60,22 @@ export default function PaintingCard({ painting }) {
                             </div>
                         )}
                     </div>
+
+                    {/* Wishlist Button */}
+                    {!isSold && (
+                        <button
+                            onClick={handleWishlist}
+                            className="absolute top-3 right-3 md:top-6 md:right-6 z-20 p-2 md:p-3 rounded-full bg-white/50 backdrop-blur-md hover:bg-white transition-all duration-300 shadow-sm md:opacity-0 group-hover:opacity-100"
+                        >
+                            <Heart
+                                size={18}
+                                className={cn(
+                                    "transition-colors duration-300",
+                                    isInWishlist(painting.id) ? "fill-red-500 text-red-500" : "text-gray-900"
+                                )}
+                            />
+                        </button>
+                    )}
 
                     {/* Hover "View" Button Icon - Hidden on mobile, visible on desktop hover */}
                     <div className="hidden md:block absolute bottom-6 right-6 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-10">

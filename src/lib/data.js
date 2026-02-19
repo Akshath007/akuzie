@@ -192,9 +192,57 @@ export async function updateOrderStatus(id, status, adminUser) {
 }
 
 export async function deleteOrder(id, adminUser) {
-    await deleteDoc(doc(db, "orders", id));
+    const orderRef = doc(db, "orders", id);
+    const orderSnap = await getDoc(orderRef);
+
+    if (orderSnap.exists()) {
+        const orderData = orderSnap.data();
+        // Move to deleted_orders collection
+        await setDoc(doc(db, "deleted_orders", id), {
+            ...orderData,
+            deletedAt: serverTimestamp(),
+            deletedBy: adminUser?.email || "unknown"
+        });
+        // Delete from active orders
+        await deleteDoc(orderRef);
+    }
+
     if (adminUser) {
         await logAdminAction(adminUser, "DELETE_ORDER", id);
+    }
+}
+
+export async function getDeletedOrders() {
+    const deletedCol = collection(db, "deleted_orders");
+    const q = query(deletedCol, orderBy("deletedAt", "desc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            deletedAt: safeToMillis(data.deletedAt),
+            createdAt: safeToMillis(data.createdAt),
+        };
+    });
+}
+
+export async function restoreOrder(id, adminUser) {
+    const deletedRef = doc(db, "deleted_orders", id);
+    const deletedSnap = await getDoc(deletedRef);
+
+    if (deletedSnap.exists()) {
+        const orderData = deletedSnap.data();
+        const { deletedAt, deletedBy, ...originalOrderData } = orderData;
+
+        // Move back to orders collection
+        await setDoc(doc(db, "orders", id), originalOrderData);
+        // Delete from deleted_orders
+        await deleteDoc(deletedRef);
+    }
+
+    if (adminUser) {
+        await logAdminAction(adminUser, "RESTORE_ORDER", id);
     }
 }
 

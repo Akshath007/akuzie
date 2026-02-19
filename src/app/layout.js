@@ -73,18 +73,21 @@ export const metadata = {
 
 import { GoogleAnalytics } from '@next/third-parties/google'
 
+import ScrollProgressBar from "@/components/ScrollProgressBar";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} scroll-smooth`}>
       <body className="bg-[#fafafa] min-h-screen flex flex-col font-sans selection:bg-stone-900 selection:text-white antialiased">
         <Providers>
+          <ScrollProgressBar />
           <Navbar />
           <main className="flex-grow">
             {children}
           </main>
           <Footer />
         </Providers>
-        <GoogleAnalytics gaId="G-157L7EBZZG" /> {/* Replace with your GA4 Measurement ID */}
+        <GoogleAnalytics gaId="G-157L7EBZZG" />
       </body>
     </html>
   );
