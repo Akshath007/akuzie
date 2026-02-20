@@ -10,90 +10,23 @@ function PaymentSuccessContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { clearCart } = useCart();
-    const [status, setStatus] = useState('processing'); // processing, success, error
+    const [orderId, setOrderId] = useState(null);
 
     useEffect(() => {
-        const verifyPayment = async () => {
-            // Get order ID from URL parameters
-            const orderId = searchParams.get('orderId');
-            const checkoutId = searchParams.get('checkout_id');
-
-            if (!orderId && !checkoutId) {
-                setStatus('error');
-                return;
-            }
-
-            // Determine which ID to use and capture all params
-            const idToVerify = orderId || checkoutId;
-            const allParams = {};
-            searchParams.forEach((value, key) => {
-                allParams[key] = value;
-            });
-
-            try {
-                const res = await fetch('/api/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        orderId: idToVerify,
-                        ...allParams
-                    })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    clearCart();
-                    setStatus('success');
-                } else {
-                    console.error("Payment verification failed:", data.status);
-                    setStatus('error');
-                }
-            } catch (err) {
-                console.error("Verification error:", err);
-                setStatus('error');
-            }
-        };
-
-        verifyPayment();
+        // Get orderId from URL (set by payu-callback redirect)
+        const id = searchParams.get('orderId');
+        if (id) {
+            setOrderId(id);
+            clearCart();
+        }
     }, [searchParams, clearCart]);
 
-    if (status === 'processing') {
+    if (!orderId) {
         return (
             <div className="min-h-screen pt-32 pb-24 px-6 flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 size={48} className="animate-spin text-violet-600 mx-auto mb-4" />
                     <p className="text-gray-600">Processing your payment...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (status === 'error') {
-        return (
-            <div className="min-h-screen pt-32 pb-24 px-6">
-                <div className="max-w-2xl mx-auto text-center">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span className="text-3xl">❌</span>
-                    </div>
-                    <h1 className="text-3xl font-serif text-gray-900 mb-4">Payment Error</h1>
-                    <p className="text-gray-600 mb-8">
-                        We couldn't verify your payment. If you were charged, please contact us.
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                        <Link
-                            href="/cart"
-                            className="px-6 py-3 bg-gray-900 text-white text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors"
-                        >
-                            Back to Cart
-                        </Link>
-                        <Link
-                            href="/"
-                            className="px-6 py-3 bg-white text-gray-900 border border-gray-200 text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors"
-                        >
-                            Continue Shopping
-                        </Link>
-                    </div>
                 </div>
             </div>
         );
@@ -117,19 +50,19 @@ function PaymentSuccessContent() {
 
                 {/* Order Details */}
                 <div className="bg-gray-50 border border-gray-100 rounded-lg p-8 mb-8 text-left animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                    <h2 className="text-xl font-serif text-gray-900 mb-4">What's Next?</h2>
+                    <h2 className="text-xl font-serif text-gray-900 mb-4">What&apos;s Next?</h2>
                     <ul className="space-y-3 text-gray-600">
                         <li className="flex items-start gap-3">
                             <span className="text-violet-600 mt-1">✓</span>
-                            <span>You'll receive an order confirmation email shortly</span>
+                            <span>You&apos;ll receive an order confirmation email shortly</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-violet-600 mt-1">✓</span>
-                            <span>We'll carefully package your artwork(s) for shipping</span>
+                            <span>We&apos;ll carefully package your artwork(s) for shipping</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-violet-600 mt-1">✓</span>
-                            <span>You'll receive tracking information within 5-7 business days</span>
+                            <span>You&apos;ll receive tracking information within 5-7 business days</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="text-violet-600 mt-1">✓</span>
@@ -141,16 +74,16 @@ function PaymentSuccessContent() {
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                     <Link
+                        href={`/orders/${orderId}`}
+                        className="px-8 py-4 bg-violet-600 text-white text-sm uppercase tracking-widest hover:bg-violet-700 transition-colors rounded-lg"
+                    >
+                        View Order Details
+                    </Link>
+                    <Link
                         href="/gallery"
                         className="px-8 py-4 bg-gray-900 text-white text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors"
                     >
                         Continue Shopping
-                    </Link>
-                    <Link
-                        href="/"
-                        className="px-8 py-4 bg-white text-gray-900 border border-gray-200 text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors"
-                    >
-                        Back to Home
                     </Link>
                 </div>
 

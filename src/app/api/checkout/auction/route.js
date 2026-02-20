@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getPayUConfig, generatePayUHash, generateTxnId } from '@/lib/payu';
 
 export async function POST(request) {
     try {
@@ -34,14 +35,13 @@ export async function POST(request) {
         }
 
         // 3. Create Order Record in Firestore
-        // This links the payment to the auction and stores shipping info
         const orderRef = await addDoc(collection(db, 'orders'), {
             type: 'auction',
             auctionId: auctionId,
             customerName,
             customerEmail,
             customerPhone,
-            address: shippingAddress || '', // Should obtain from frontend
+            address: shippingAddress || '',
             items: [{
                 id: auctionId,
                 title: `Auction: ${auction.title}`,
@@ -50,58 +50,58 @@ export async function POST(request) {
             }],
             totalAmount: payAmount,
             paymentStatus: 'payment_pending',
+            method: 'payu_online',
             userId: userId,
             createdAt: serverTimestamp()
         });
 
         const orderId = orderRef.id;
 
-        // 4. Create Cashfree Order
-        const amount = payAmount;
-        const isSandbox = process.env.NEXT_PUBLIC_CASHFREE_MODE === 'sandbox';
-        const apiUrl = isSandbox
-            ? 'https://sandbox.cashfree.com/pg/orders'
-            : 'https://api.cashfree.com/pg/orders';
+        // 4. Generate PayU payment params
+        const config = getPayUConfig();
 
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-client-id': process.env.CASHFREE_APP_ID,
-                'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-                'x-api-version': '2022-09-01',
-            },
-            body: JSON.stringify({
-                order_amount: amount,
-                order_currency: 'INR',
-                order_id: orderId, // Link Cashfree order to Firestore Order Doc
-                customer_details: {
-                    customer_id: userId,
-                    customer_name: customerName || 'Auction Winner',
-                    customer_email: customerEmail || 'winner@example.com',
-                    customer_phone: customerPhone || '9999999999',
-                },
-                order_meta: {
-                    return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?order_id=${orderId}`,
-                    notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhook`,
-                },
-                order_note: `Auction Payment ${auctionId}`,
-                order_tags: {
-                    type: 'auction',
-                    auctionId: auctionId
-                }
-            }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('Cashfree API error:', data);
-            // Rollback order creation? Theoretically yes, but practically okay to leave pending doc
-            throw new Error(data.message || 'Failed to create Cashfree order');
+        if (!config.key || !config.salt) {
+            return NextResponse.json({ error: 'Payment gateway not configured' }, { status: 500 });
         }
 
-        return NextResponse.json({ ...data, orderId });
+        const txnid = generateTxnId();
+        const formattedAmount = parseFloat(payAmount).toFixed(2);
+        const productinfo = `Auction: ${auction.title}`.substring(0, 100);
+
+        const hash = generatePayUHash({
+            key: config.key,
+            salt: config.salt,
+            txnid,
+            amount: formattedAmount,
+            productinfo,
+            firstname: customerName || 'Auction Winner',
+            email: customerEmail || 'winner@example.com',
+            udf1: orderId,
+        });
+
+        const formData = {
+            key: config.key,
+            txnid,
+            amount: formattedAmount,
+            productinfo,
+            firstname: customerName || 'Auction Winner',
+            email: customerEmail || 'winner@example.com',
+            phone: customerPhone || '',
+            surl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payu-callback`,
+            furl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payu-callback`,
+            hash,
+            udf1: orderId,
+            udf2: auctionId,
+            udf3: '',
+            udf4: '',
+            udf5: '',
+        };
+
+        return NextResponse.json({
+            formData,
+            paymentUrl: config.paymentUrl,
+            orderId,
+        });
 
     } catch (error) {
         console.error('Auction checkout error:', error);

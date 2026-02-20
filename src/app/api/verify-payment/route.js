@@ -5,12 +5,15 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { markItemsAsSold } from '@/lib/data';
 import { templates } from '@/lib/email';
 
+/**
+ * Verify Payment API
+ * Used by admin to manually confirm payments (e.g. manual UPI)
+ * Also used as a fallback verification endpoint
+ */
 export async function POST(req) {
     try {
         const body = await req.json();
         const { orderId, paymentId } = body;
-
-        console.log("Verify Payment Params:", body);
 
         if (!orderId) {
             return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
@@ -25,24 +28,23 @@ export async function POST(req) {
 
         const currentOrderData = orderSnap.data();
 
-        // Idempotency check: if already paid, success
+        // Idempotency check
         if (currentOrderData.paymentStatus === 'paid') {
             return NextResponse.json({ success: true, status: 'already_paid' });
         }
 
-        // For manual UPI payments, admin verifies via dashboard
-        // This endpoint can be used by admin to confirm payment
+        // Admin manual confirmation
         if (paymentId) {
             await updateDoc(orderRef, {
                 paymentStatus: 'paid',
                 paymentId: paymentId,
                 paidAt: serverTimestamp(),
-                method: 'manual_upi',
+                method: currentOrderData.method || 'manual_upi',
             });
 
             await markItemsAsSold(orderId);
 
-            // Trigger Confirmation Email
+            // Send confirmation email
             try {
                 await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-email`, {
                     method: 'POST',
@@ -54,7 +56,7 @@ export async function POST(req) {
                     })
                 });
             } catch (emailErr) {
-                console.error("Failed to send confirmation email:", emailErr);
+                console.error('Failed to send confirmation email:', emailErr);
             }
 
             return NextResponse.json({ success: true, status: 'paid' });
@@ -63,11 +65,11 @@ export async function POST(req) {
         return NextResponse.json({
             success: false,
             status: 'pending_verification',
-            message: 'Payment verification pending. Admin will review your payment screenshot.'
+            message: 'Payment verification pending.'
         });
 
     } catch (error) {
-        console.error("Payment Verification API Error:", error);
+        console.error('Payment Verification API Error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

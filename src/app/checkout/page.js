@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { processOrder, getPainting } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, QrCode } from 'lucide-react';
+import { Loader2, ShieldCheck, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -51,7 +51,14 @@ export default function CheckoutPage() {
         setStep(2);
     };
 
-    const handlePaymentComplete = async () => {
+    /**
+     * PayU Hosted Checkout flow:
+     * 1. Create order in Firestore
+     * 2. Call /api/payu-initiate to get hash + form params
+     * 3. Auto-submit hidden form to PayU payment URL
+     * 4. PayU handles payment UI and redirects back to our callback
+     */
+    const handlePayUPayment = async () => {
         setLoading(true);
         try {
             const orderData = {
@@ -60,10 +67,13 @@ export default function CheckoutPage() {
                 phone: formData.phone,
                 address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
                 pincode: formData.postalCode,
-                items: cart.map(item => ({ id: item.id, title: item.title, price: item.price, images: item.images || [], medium: item.medium || '' })),
+                items: cart.map(item => ({
+                    id: item.id, title: item.title, price: item.price,
+                    images: item.images || [], medium: item.medium || ''
+                })),
                 totalAmount: total,
                 paymentStatus: 'pending',
-                method: 'manual_upi',
+                method: 'payu_online',
                 userId: user?.uid || null,
                 userEmail: user?.email || formData.email,
             };
@@ -79,15 +89,87 @@ export default function CheckoutPage() {
                 return;
             }
 
-            // 2. Create local order
+            // 2. Create local order in Firestore
             const orderId = await processOrder(orderData, paintingIds);
 
-            // 3. Redirect to manual payment page
-            router.push(`/checkout/manual-payment?orderId=${orderId}`);
+            // 3. Get PayU form params from server
+            const productInfo = cart.map(item => item.title).join(', ').substring(0, 100);
+            const response = await fetch('/api/payu-initiate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId,
+                    customerName: formData.name,
+                    customerEmail: formData.email,
+                    customerPhone: formData.phone,
+                    amount: total,
+                    productinfo: productInfo || `Akuzie Art Order`,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.formData) {
+                throw new Error(data.error || 'Failed to initiate payment');
+            }
+
+            // 4. Create and auto-submit hidden form to PayU
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = data.paymentUrl;
+
+            Object.entries(data.formData).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value || '';
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
 
         } catch (error) {
             console.error("Payment initiation failed", error);
             alert(`Payment failed: ${error.message}. Please try again.`);
+            setLoading(false);
+        }
+    };
+
+    const handleManualPayment = async () => {
+        setLoading(true);
+        try {
+            const orderData = {
+                customerName: formData.name,
+                customerEmail: formData.email,
+                phone: formData.phone,
+                address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
+                pincode: formData.postalCode,
+                items: cart.map(item => ({
+                    id: item.id, title: item.title, price: item.price,
+                    images: item.images || [], medium: item.medium || ''
+                })),
+                totalAmount: total,
+                paymentStatus: 'pending',
+                method: 'manual_upi',
+                userId: user?.uid || null,
+                userEmail: user?.email || formData.email,
+            };
+            const paintingIds = cart.map(item => item.id);
+            const availabilityChecks = await Promise.all(paintingIds.map(id => getPainting(id)));
+            const soldItems = availabilityChecks.filter(p => !p || p.status === 'sold');
+
+            if (soldItems.length > 0) {
+                alert("Sorry, one or more items in your cart were just purchased by someone else.");
+                router.push('/cart');
+                return;
+            }
+
+            const orderId = await processOrder(orderData, paintingIds);
+            router.push(`/checkout/manual-payment?orderId=${orderId}`);
+        } catch (err) {
+            alert("Error creating order: " + err.message);
+        } finally {
             setLoading(false);
         }
     };
@@ -102,8 +184,8 @@ export default function CheckoutPage() {
                         <span className={step === 1 ? "text-gray-900 font-bold" : ""}>Details</span>
                     </div>
                     <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
-                        <span className={step === 2 || step === 3 ? "text-gray-900 font-bold" : ""}>02.</span>
-                        <span className={step === 2 || step === 3 ? "text-gray-900 font-bold" : ""}>Payment</span>
+                        <span className={step === 2 ? "text-gray-900 font-bold" : ""}>02.</span>
+                        <span className={step === 2 ? "text-gray-900 font-bold" : ""}>Payment</span>
                     </div>
                     <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
                         <span>03.</span>
@@ -113,7 +195,7 @@ export default function CheckoutPage() {
                 <div className="h-[2px] bg-gray-100 relative">
                     <div
                         className="absolute left-0 top-0 h-full bg-gray-900 transition-all duration-500 ease-out"
-                        style={{ width: step === 1 ? '33.33%' : (step === 2 || step === 3) ? '66.66%' : '100%' }}
+                        style={{ width: step === 1 ? '33.33%' : step === 2 ? '66.66%' : '100%' }}
                     ></div>
                 </div>
             </div>
@@ -126,84 +208,57 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs uppercase tracking-wide text-gray-500">Full Name</label>
-                            <input
-                                name="name"
-                                required
+                            <input name="name" required
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.name} onChange={handleInputChange} />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs uppercase tracking-wide text-gray-500">Email</label>
-                            <input
-                                name="email"
-                                type="email"
-                                required
+                            <input name="email" type="email" required
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.email} onChange={handleInputChange} />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs uppercase tracking-wide text-gray-500">Phone Number</label>
-                            <input
-                                name="phone"
-                                required
-                                placeholder="Required for payment"
+                            <input name="phone" required placeholder="Required for payment"
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.phone} onChange={handleInputChange} />
                         </div>
                         <div className="col-span-1 md:col-span-2 space-y-2">
                             <label className="text-xs uppercase tracking-wide text-gray-500">Address</label>
-                            <input
-                                name="address"
-                                required
+                            <input name="address" required
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
-                                value={formData.address}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.address} onChange={handleInputChange} />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs uppercase tracking-wide text-gray-500">City</label>
-                            <input
-                                name="city"
-                                required
+                            <input name="city" required
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.city} onChange={handleInputChange} />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs uppercase tracking-wide text-gray-500">Postal Code</label>
-                            <input
-                                name="postalCode"
-                                required
+                            <input name="postalCode" required
                                 className="w-full p-3 border border-gray-200 bg-gray-50 focus:outline-none focus:border-gray-400 transition-colors"
-                                value={formData.postalCode}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.postalCode} onChange={handleInputChange} />
                         </div>
                     </div>
 
                     <div className="pt-8">
-                        <button
-                            type="submit"
-                            className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors"
-                        >
+                        <button type="submit"
+                            className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors">
                             Continue to Payment
                         </button>
                     </div>
                 </form>
             )}
 
-            {/* Step 2: Payment */}
+            {/* Step 2: Payment Options */}
             {step === 2 && (
                 <div className="space-y-8 fade-in">
                     <h2 className="text-2xl font-light text-gray-900">Payment</h2>
 
+                    {/* Order Summary */}
                     <div className="bg-gray-50 p-8 border border-gray-100 rounded-lg">
                         <div className="text-center mb-8">
                             <p className="text-sm text-gray-500 mb-4 uppercase tracking-wide">Order Summary</p>
@@ -221,15 +276,11 @@ export default function CheckoutPage() {
                                 </div>
                             ))}
                         </div>
-
-                        <div className="text-xs text-gray-400 text-center max-w-sm mx-auto leading-relaxed">
-                            Complete your purchase securely via UPI. Scan the QR code or pay directly from your favorite apps.
-                        </div>
                     </div>
 
-
+                    {/* PayU Payment Button */}
                     <button
-                        onClick={handlePaymentComplete}
+                        onClick={handlePayUPayment}
                         disabled={loading}
                         className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-5 rounded-2xl text-sm font-bold uppercase tracking-[0.2em] shadow-xl shadow-violet-200 hover:shadow-violet-300 hover:scale-[1.01] transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
                     >
@@ -237,10 +288,28 @@ export default function CheckoutPage() {
                             <Loader2 size={20} className="animate-spin" />
                         ) : (
                             <>
-                                Proceed to Pay via UPI
+                                <CreditCard size={20} />
+                                Pay Securely via PayU
                             </>
                         )}
                     </button>
+
+                    {/* Security Badge */}
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                        <ShieldCheck size={14} />
+                        <span>Secured by PayU | UPI • Cards • Net Banking • Wallets</span>
+                    </div>
+
+                    {/* Manual UPI Backup */}
+                    <div className="pt-4 border-t border-gray-100">
+                        <button
+                            onClick={handleManualPayment}
+                            disabled={loading}
+                            className="w-full text-gray-500 text-xs hover:text-gray-900 underline"
+                        >
+                            Having trouble? Pay via Manual UPI Scan
+                        </button>
+                    </div>
 
                     <button
                         onClick={() => setStep(1)}

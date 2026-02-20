@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { load } from '@cashfreepayments/cashfree-js';
 import { formatPrice } from '@/lib/utils';
 import { Loader2, ShieldCheck, CreditCard } from 'lucide-react';
 import Image from 'next/image';
@@ -42,7 +41,6 @@ export default function AuctionCheckoutPage() {
 
                 const data = { id: docSnap.id, ...docSnap.data() };
 
-                // Validate Winner (Check currentWinnerId first for cascading support)
                 const currentWinnerId = data.currentWinnerId || data.highestBidderId;
                 if (currentWinnerId !== user.uid) {
                     setError('Forbidden: Only the winner can access checkout.');
@@ -71,7 +69,7 @@ export default function AuctionCheckoutPage() {
     const handlePayment = async () => {
         setProcessing(true);
         try {
-            // Initiate backend checkout
+            // 1. Call auction checkout API to get PayU form params
             const response = await fetch('/api/checkout/auction', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -80,26 +78,32 @@ export default function AuctionCheckoutPage() {
                     userId: user.uid,
                     customerName: user.displayName || 'Winner',
                     customerEmail: user.email,
-                    customerPhone: '9999999999', // Collect if needed
+                    customerPhone: '9999999999',
                     shippingAddress: address
                 }),
             });
 
             const data = await response.json();
 
-            if (!response.ok) {
+            if (!response.ok || !data.formData) {
                 throw new Error(data.error || 'Payment initialization failed');
             }
 
-            // Launch Cashfree
-            const cashfree = await load({
-                mode: process.env.NEXT_PUBLIC_CASHFREE_MODE || 'sandbox',
+            // 2. Auto-submit hidden form to PayU
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = data.paymentUrl;
+
+            Object.entries(data.formData).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value || '';
+                form.appendChild(input);
             });
 
-            cashfree.checkout({
-                paymentSessionId: data.payment_session_id,
-                redirectTarget: '_self',
-            });
+            document.body.appendChild(form);
+            form.submit();
 
         } catch (err) {
             console.error(err);
@@ -131,7 +135,6 @@ export default function AuctionCheckoutPage() {
         );
     }
 
-    // Determine correct price to show
     const payAmount = auction.currentWinningBid || auction.currentHighestBid;
 
     return (
@@ -206,7 +209,7 @@ export default function AuctionCheckoutPage() {
                     </button>
 
                     <p className="text-center text-xs text-gray-400">
-                        Secure payment powered by Cashfree.
+                        Secure payment powered by PayU.
                     </p>
                 </div>
             </div>
