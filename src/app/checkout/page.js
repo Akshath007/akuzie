@@ -300,17 +300,6 @@ export default function CheckoutPage() {
                         <span>Secured by PayU | UPI • Cards • Net Banking • Wallets</span>
                     </div>
 
-                    {/* Manual UPI Backup */}
-                    <div className="pt-4 border-t border-gray-100">
-                        <button
-                            onClick={handleManualPayment}
-                            disabled={loading}
-                            className="w-full text-gray-500 text-xs hover:text-gray-900 underline"
-                        >
-                            Having trouble? Pay via Manual UPI Scan
-                        </button>
-                    </div>
-
                     <button
                         onClick={() => setStep(1)}
                         disabled={loading}
