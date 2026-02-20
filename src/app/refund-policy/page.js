@@ -12,7 +12,7 @@ export default function RefundPage() {
 
             <div className="prose prose-stone prose-lg max-w-none text-gray-600 font-light">
                 <p>
-                    This Return &amp; Refund Policy is applicable to all purchases made on <strong>akuzie.in</strong>, operated by <strong>Manasa K</strong>.
+                    This Return &amp; Refund Policy is applicable to all purchases made on <strong>akuzie.in</strong>, operated by <strong>Akuzie</strong>.
                 </p>
 
                 <h3>Return Policy</h3>
@@ -71,8 +71,8 @@ export default function RefundPage() {
                 </p>
                 <p>
                     <strong>Email:</strong> akuzie27@gmail.com<br />
-                    <strong>Manasa K</strong><br />
-                    No.20, Gokula, Elite Palms, Medarahalli Railway Crossing Rd, Medaralli, Jalahalli West, Bengaluru, Myadarahalli, Karnataka 560090, India
+                    <strong>Akuzie</strong><br />
+                    Bengaluru, Karnataka, India
                 </p>
             </div>
         </div>

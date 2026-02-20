@@ -20,7 +20,7 @@ export default function AboutPage() {
 
                 {/* Tagline */}
                 <p className="text-lg md:text-xl text-gray-400 font-light mb-4">
-                    Original Art &amp; Handmade Creations
+                    Where Everything Hits Different
                 </p>
 
                 {/* Location */}

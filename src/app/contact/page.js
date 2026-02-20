@@ -71,31 +71,11 @@ export default function ContactPage() {
                                     <span className="text-xs font-bold uppercase tracking-widest">Address</span>
                                 </div>
                                 <p className="text-gray-600 font-light text-sm leading-relaxed">
-                                    No.20, Gokula, Elite Palms,<br />
-                                    Medarahalli Railway Crossing Rd,<br />
-                                    Medaralli, Jalahalli West,<br />
-                                    Bengaluru, Myadarahalli,<br />
-                                    Karnataka 560090, India
+                                    Bengaluru, Karnataka, India
                                 </p>
                             </div>
                         </div>
 
-                        {/* Map placeholder with actual address */}
-                        <div className="aspect-[16/9] relative bg-stone-100 overflow-hidden border border-gray-100 rounded-3xl">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.0!2d77.52!3d13.05!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTPCsDAzJzAwLjAiTiA3N8KwMzEnMTIuMCJF!5e0!3m2!1sen!2sin!4v1600000000000"
-                                width="100%"
-                                height="100%"
-                                style={{ border: 0 }}
-                                allowFullScreen=""
-                                loading="lazy"
-                                referrerPolicy="no-referrer-when-downgrade"
-                                className="absolute inset-0 grayscale opacity-70"
-                            ></iframe>
-                            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl">
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-medium">Bengaluru, Karnataka, India</p>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Contact Form */}

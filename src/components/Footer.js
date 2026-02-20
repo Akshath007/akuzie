@@ -24,7 +24,7 @@ export default function Footer() {
                             akuzie
                         </Link>
                         <p className="text-sm text-gray-400 font-light leading-relaxed">
-                            Original handmade paintings &amp; crochet creations by Manasa K.
+                            Original handmade paintings &amp; crochet creations.
                         </p>
                         {/* Social Symbols */}
                         <div className="flex items-center gap-6 pt-2">
@@ -92,7 +92,7 @@ export default function Footer() {
                         </div>
                         <div className="flex items-center gap-2">
                             <MapPin size={14} className="text-gray-300" />
-                            <span>Bengaluru, Karnataka 560090, India</span>
+                            <span>Bengaluru, Karnataka, India</span>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@ export default function Footer() {
                 {/* Bottom line */}
                 <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="text-[10px] uppercase tracking-[0.3em] text-gray-300 font-bold">
-                        &copy; {new Date().getFullYear()} AKUZIE — Operated by Manasa K
+                        &copy; {new Date().getFullYear()} AKUZIE
                     </div>
                     <div className="text-[10px] text-gray-300 font-light">
                         All rights reserved.

@@ -13,7 +13,7 @@ export default function TermsPage() {
             <div className="prose prose-stone prose-lg max-w-none text-gray-600 font-light">
                 <h3>1. Introduction</h3>
                 <p>
-                    This website is operated by <strong>Manasa K</strong>. Throughout the site, the terms &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; refer to Manasa K, operating under the brand name <strong>Akuzie</strong>.
+                    This website is operated by <strong>Akuzie</strong>. Throughout the site, the terms &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; refer to <strong>Akuzie</strong>.
                 </p>
                 <p>
                     By visiting our site and/or purchasing something from us, you engage in our &ldquo;Service&rdquo; and agree to be bound by the following terms and conditions (&ldquo;Terms &amp; Conditions&rdquo;, &ldquo;Terms&rdquo;), including those additional terms and conditions and policies referenced herein. These Terms &amp; Conditions apply to all users of the site, including without limitation users who are browsers, vendors, customers, merchants, and/or contributors of content.
@@ -24,9 +24,8 @@ export default function TermsPage() {
 
                 <h3>2. Business Information</h3>
                 <p>
-                    <strong>Legal Name:</strong> Manasa K<br />
                     <strong>Brand Name:</strong> Akuzie<br />
-                    <strong>Registered Address:</strong> No.20, Gokula, Elite Palms, Medarahalli Railway Crossing Rd, Medaralli, Jalahalli West, Bengaluru, Myadarahalli, Karnataka 560090, India<br />
+                    <strong>Location:</strong> Bengaluru, Karnataka, India<br />
                     <strong>Email:</strong> akuzie27@gmail.com
                 </p>
 
@@ -50,7 +49,7 @@ export default function TermsPage() {
 
                 <h3>6. Intellectual Property</h3>
                 <p>
-                    The Service and its original content, features, and functionality are and will remain the exclusive property of Manasa K (Akuzie) and its licensors. All artwork displayed and sold on this website is original and protected by copyright. Reproduction, distribution, or unauthorized use of the artwork is strictly prohibited.
+                    The Service and its original content, features, and functionality are and will remain the exclusive property of Akuzie and its licensors. All artwork displayed and sold on this website is original and protected by copyright. Reproduction, distribution, or unauthorized use of the artwork is strictly prohibited.
                 </p>
 
                 <h3>7. User Conduct</h3>
@@ -60,7 +59,7 @@ export default function TermsPage() {
 
                 <h3>8. Limitation of Liability</h3>
                 <p>
-                    In no event shall Manasa K (Akuzie), or our directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service.
+                    In no event shall Akuzie, or our directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service.
                 </p>
 
                 <h3>9. Governing Law</h3>
@@ -78,8 +77,8 @@ export default function TermsPage() {
                     Questions about the Terms &amp; Conditions should be sent to us at <strong>akuzie27@gmail.com</strong>.
                 </p>
                 <p>
-                    <strong>Manasa K</strong><br />
-                    No.20, Gokula, Elite Palms, Medarahalli Railway Crossing Rd, Medaralli, Jalahalli West, Bengaluru, Myadarahalli, Karnataka 560090, India
+                    <strong>Akuzie</strong><br />
+                    Bengaluru, Karnataka, India
                 </p>
             </div>
         </div>

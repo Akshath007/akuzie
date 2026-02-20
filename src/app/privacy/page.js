@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
             <div className="prose prose-stone prose-lg max-w-none text-gray-600 font-light">
                 <p>
-                    This Privacy Policy describes how <strong>Manasa K</strong>, operating under the brand name <strong>Akuzie</strong> (the &ldquo;Site&rdquo;), collects, uses, and discloses your personal information when you visit, use our services, or make a purchase from <strong>akuzie.in</strong>.
+                    This Privacy Policy describes how <strong>Akuzie</strong> (the &ldquo;Site&rdquo;) collects, uses, and discloses your personal information when you visit, use our services, or make a purchase from <strong>akuzie.in</strong>.
                 </p>
 
                 <h3>1. Information We Collect</h3>
@@ -69,8 +69,8 @@ export default function PrivacyPage() {
                     For more information about our privacy practices, if you have questions, or if you would like to make a complaint, please contact us by e-mail at <strong>akuzie27@gmail.com</strong> or by mail at:
                 </p>
                 <p>
-                    <strong>Manasa K</strong><br />
-                    No.20, Gokula, Elite Palms, Medarahalli Railway Crossing Rd, Medaralli, Jalahalli West, Bengaluru, Myadarahalli, Karnataka 560090, India
+                    <strong>Akuzie</strong><br />
+                    Bengaluru, Karnataka, India
                 </p>
             </div>
         </div>
