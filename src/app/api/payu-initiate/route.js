@@ -34,6 +34,7 @@ export async function POST(request) {
             productinfo: productinfo || `Order #${orderId}`,
             firstname: customerName || 'Customer',
             email: customerEmail || 'customer@example.com',
+            udf1: orderId, // Must match what's sent in the form
         });
 
         // Return form params for the frontend to submit
