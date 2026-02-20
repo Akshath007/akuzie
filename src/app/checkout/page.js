@@ -51,8 +51,7 @@ export default function CheckoutPage() {
         setStep(2);
     };
 
-    const handlePaymentComplete = async (event) => {
-        if (event) event.preventDefault();
+    const handlePaymentComplete = async () => {
         setLoading(true);
         try {
             const orderData = {
@@ -64,7 +63,7 @@ export default function CheckoutPage() {
                 items: cart.map(item => ({ id: item.id, title: item.title, price: item.price, images: item.images || [], medium: item.medium || '' })),
                 totalAmount: total,
                 paymentStatus: 'pending',
-                method: 'shiprocket_online',
+                method: 'manual_upi',
                 userId: user?.uid || null,
                 userEmail: user?.email || formData.email,
             };
@@ -83,32 +82,8 @@ export default function CheckoutPage() {
             // 2. Create local order
             const orderId = await processOrder(orderData, paintingIds);
 
-            // 3. Generate Shiprocket Token
-            const response = await fetch('/api/shiprocket-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    orderId,
-                    amount: total,
-                    items: cart.map(item => ({ id: item.id, name: item.title, price: item.price }))
-                })
-            });
-            const data = await response.json();
-
-            if (!data.token) {
-                throw new Error(data.error || 'Failed to generate payment token');
-            }
-
-            // 4. Trigger Shiprocket Checkout
-            if (window.HeadlessCheckout) {
-                window.HeadlessCheckout.addToCart(event, data.token, {
-                    fallbackUrl: `${window.location.origin}/checkout/manual-payment?orderId=${orderId}`
-                });
-            } else {
-                console.error("Shiprocket script not loaded");
-                alert("Payment gateway failed to load. Redirecting to manual payment.");
-                router.push(`/checkout/manual-payment?orderId=${orderId}`);
-            }
+            // 3. Redirect to manual payment page
+            router.push(`/checkout/manual-payment?orderId=${orderId}`);
 
         } catch (error) {
             console.error("Payment initiation failed", error);
@@ -121,11 +96,6 @@ export default function CheckoutPage() {
     return (
         <div className="max-w-3xl mx-auto px-6 pt-32 pb-20">
             <div className="mb-16">
-                <link rel="stylesheet" href="https://checkout-ui.shiprocket.com/assets/styles/shopify.css" />
-                <script src="https://checkout-ui.shiprocket.com/assets/js/channels/shopify.js" async></script>
-                {/* Hidden input required by Shiprocket script */}
-                <input type="hidden" value="akuzie.in" id="sellerDomain" />
-
                 <div className="flex items-center justify-between text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] text-gray-400 mb-6">
                     <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
                         <span className={step === 1 ? "text-gray-900 font-bold" : ""}>01.</span>
@@ -229,7 +199,7 @@ export default function CheckoutPage() {
                 </form>
             )}
 
-            {/* Step 2: Cashfree Payment */}
+            {/* Step 2: Payment */}
             {step === 2 && (
                 <div className="space-y-8 fade-in">
                     <h2 className="text-2xl font-light text-gray-900">Payment</h2>
@@ -267,53 +237,10 @@ export default function CheckoutPage() {
                             <Loader2 size={20} className="animate-spin" />
                         ) : (
                             <>
-                                Proceed to Secure Payment
+                                Proceed to Pay via UPI
                             </>
                         )}
                     </button>
-
-                    {/* Hidden Manual Payment Option (Backup) */}
-                    <div className="pt-4 border-t border-gray-100">
-                        <button
-                            onClick={async () => {
-                                setLoading(true);
-                                try {
-                                    const orderData = {
-                                        customerName: formData.name,
-                                        customerEmail: formData.email,
-                                        phone: formData.phone,
-                                        address: `${formData.address}, ${formData.city}, ${formData.postalCode}`,
-                                        pincode: formData.postalCode,
-                                        items: cart.map(item => ({ id: item.id, title: item.title, price: item.price, images: item.images || [], medium: item.medium || '' })),
-                                        totalAmount: total,
-                                        paymentStatus: 'pending',
-                                        method: 'manual_upi',
-                                        userId: user?.uid || null,
-                                        userEmail: user?.email || formData.email,
-                                    };
-                                    const paintingIds = cart.map(item => item.id);
-                                    const availabilityChecks = await Promise.all(paintingIds.map(id => getPainting(id)));
-                                    const soldItems = availabilityChecks.filter(p => !p || p.status === 'sold');
-
-                                    if (soldItems.length > 0) {
-                                        alert("Sorry, one or more items in your cart were just purchased by someone else.");
-                                        router.push('/cart');
-                                        return;
-                                    }
-
-                                    const orderId = await processOrder(orderData, paintingIds);
-                                    router.push(`/checkout/manual-payment?orderId=${orderId}`);
-                                } catch (err) {
-                                    alert("Error creating order: " + err.message);
-                                } finally {
-                                    setLoading(false);
-                                }
-                            }}
-                            className="w-full text-gray-500 text-xs hover:text-gray-900 underline"
-                        >
-                            Having trouble? Pay via Manual UPI Scan
-                        </button>
-                    </div>
 
                     <button
                         onClick={() => setStep(1)}

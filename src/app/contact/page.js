@@ -21,10 +21,10 @@ export default function ContactPage() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-20 text-center max-w-2xl mx-auto">
-                    <h1 className="text-4xl md:text-6xl font-serif text-gray-900 mb-6 italic">Connect</h1>
+                    <h1 className="text-4xl md:text-6xl font-serif text-gray-900 mb-6 italic">Contact Us</h1>
                     <p className="text-gray-500 font-light tracking-wide leading-relaxed">
-                        For inquiries regarding original commissions, collection details, or crochet bespoke pieces,
-                        please reach out through the forum below or our direct channels.
+                        For inquiries regarding original commissions, collection details, orders, or crochet bespoke pieces,
+                        please reach out through the form below or our direct channels.
                     </p>
                     <div className="w-12 h-px bg-gray-300 mx-auto mt-8"></div>
                 </div>
@@ -46,20 +46,54 @@ export default function ContactPage() {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3 text-gray-900 mb-4">
                                     <div className="w-10 h-10 bg-white shadow-sm flex items-center justify-center rounded-full">
+                                        <Phone size={18} className="text-gray-400" />
+                                    </div>
+                                    <span className="text-xs font-bold uppercase tracking-widest">Phone</span>
+                                </div>
+                                <p className="text-gray-600 font-light">+91 82172 62053</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 text-gray-900 mb-4">
+                                    <div className="w-10 h-10 bg-white shadow-sm flex items-center justify-center rounded-full">
                                         <Instagram size={18} className="text-gray-400" />
                                     </div>
                                     <span className="text-xs font-bold uppercase tracking-widest">Instagram</span>
                                 </div>
                                 <p className="text-gray-600 font-light">@akuzie_</p>
                             </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 text-gray-900 mb-4">
+                                    <div className="w-10 h-10 bg-white shadow-sm flex items-center justify-center rounded-full">
+                                        <MapPin size={18} className="text-gray-400" />
+                                    </div>
+                                    <span className="text-xs font-bold uppercase tracking-widest">Address</span>
+                                </div>
+                                <p className="text-gray-600 font-light text-sm leading-relaxed">
+                                    No.20, Gokula, Elite Palms,<br />
+                                    Medarahalli Railway Crossing Rd,<br />
+                                    Medaralli, Jalahalli West,<br />
+                                    Bengaluru, Myadarahalli,<br />
+                                    Karnataka 560090, India
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="aspect-[16/9] relative bg-stone-100 overflow-hidden grayscale opacity-70 border border-gray-100 rounded-3xl">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-center space-y-4">
-                                    <MapPin size={32} className="text-gray-300 mx-auto" />
-                                    <p className="text-xs uppercase tracking-[0.3em] text-gray-400 font-medium">Udupi, Karnataka, India</p>
-                                </div>
+                        {/* Map placeholder with actual address */}
+                        <div className="aspect-[16/9] relative bg-stone-100 overflow-hidden border border-gray-100 rounded-3xl">
+                            <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.0!2d77.52!3d13.05!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTPCsDAzJzAwLjAiTiA3N8KwMzEnMTIuMCJF!5e0!3m2!1sen!2sin!4v1600000000000"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                allowFullScreen=""
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                className="absolute inset-0 grayscale opacity-70"
+                            ></iframe>
+                            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl">
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-medium">Bengaluru, Karnataka, India</p>
                             </div>
                         </div>
                     </div>
@@ -111,6 +145,8 @@ export default function ContactPage() {
                                         <option>General Inquiry</option>
                                         <option>Commission Request</option>
                                         <option>Order Assistance</option>
+                                        <option>Shipping Query</option>
+                                        <option>Return / Refund</option>
                                         <option>Business Partnership</option>
                                     </select>
                                 </div>

@@ -36,7 +36,7 @@ function PaymentSuccessContent() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         orderId: idToVerify,
-                        ...allParams // Pass everything Shiprocket might have sent
+                        ...allParams
                     })
                 });
 

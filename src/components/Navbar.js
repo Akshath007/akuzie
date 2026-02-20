@@ -125,6 +125,18 @@ export default function Navbar() {
                             >
                                 Crochet
                             </Link>
+                            <Link
+                                href="/about"
+                                className={cn("text-xs uppercase tracking-[0.2em] font-medium transition-colors", isTransparent ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-gray-900")}
+                            >
+                                About
+                            </Link>
+                            <Link
+                                href="/contact"
+                                className={cn("text-xs uppercase tracking-[0.2em] font-medium transition-colors", isTransparent ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-gray-900")}
+                            >
+                                Contact
+                            </Link>
                         </div>
 
                         <div className="hidden md:flex items-center gap-8">
@@ -255,6 +267,8 @@ export default function Navbar() {
                     <Link href="/gallery?category=painting" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Art</Link>
                     <Link href="/auctions" className="font-serif text-4xl text-red-600 hover:text-red-700 transition-colors animate-pulse" onClick={() => setIsOpen(false)}>Live Auctions</Link>
                     <Link href="/gallery?category=crochet" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Crochet</Link>
+                    <Link href="/about" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>About</Link>
+                    <Link href="/contact" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Contact</Link>
                     <Link href="/wishlist" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Wishlist ({wishlist.length})</Link>
                     <Link href="/cart" className="font-serif text-4xl text-gray-900 hover:text-stone-500 transition-colors" onClick={() => setIsOpen(false)}>Cart ({cart.length})</Link>
 
