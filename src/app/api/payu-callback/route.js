@@ -43,7 +43,8 @@ export async function POST(request) {
         if (!orderId) {
             console.error('No orderId (udf1) in PayU callback');
             return NextResponse.redirect(
-                new URL('/payment-failed?error=missing_order', process.env.NEXT_PUBLIC_BASE_URL)
+                new URL('/payment-failed?error=missing_order', process.env.NEXT_PUBLIC_BASE_URL),
+                303
             );
         }
 
@@ -64,7 +65,8 @@ export async function POST(request) {
         if (!isValidHash) {
             console.error('Invalid reverse hash from PayU! Possible tampering.');
             return NextResponse.redirect(
-                new URL(`/payment-failed?orderId=${orderId}&error=hash_mismatch`, process.env.NEXT_PUBLIC_BASE_URL)
+                new URL(`/payment-failed?orderId=${orderId}&error=hash_mismatch`, process.env.NEXT_PUBLIC_BASE_URL),
+                303
             );
         }
 
@@ -75,7 +77,8 @@ export async function POST(request) {
         if (!orderSnap.exists()) {
             console.error('Order not found in Firestore:', orderId);
             return NextResponse.redirect(
-                new URL(`/payment-failed?error=order_not_found`, process.env.NEXT_PUBLIC_BASE_URL)
+                new URL(`/payment-failed?error=order_not_found`, process.env.NEXT_PUBLIC_BASE_URL),
+                303
             );
         }
 
@@ -84,7 +87,8 @@ export async function POST(request) {
         // Idempotency: if already paid, just redirect to success
         if (currentOrderData.paymentStatus === 'paid') {
             return NextResponse.redirect(
-                new URL(`/payment-success?orderId=${orderId}`, process.env.NEXT_PUBLIC_BASE_URL)
+                new URL(`/payment-success?orderId=${orderId}`, process.env.NEXT_PUBLIC_BASE_URL),
+                303
             );
         }
 
@@ -119,7 +123,8 @@ export async function POST(request) {
             }
 
             return NextResponse.redirect(
-                new URL(`/payment-success?orderId=${orderId}`, process.env.NEXT_PUBLIC_BASE_URL)
+                new URL(`/payment-success?orderId=${orderId}`, process.env.NEXT_PUBLIC_BASE_URL),
+                303
             );
 
         } else {
@@ -133,14 +138,16 @@ export async function POST(request) {
 
             const errorMsg = encodeURIComponent(error_Message || 'Payment failed');
             return NextResponse.redirect(
-                new URL(`/payment-failed?orderId=${orderId}&error=${errorMsg}`, process.env.NEXT_PUBLIC_BASE_URL)
+                new URL(`/payment-failed?orderId=${orderId}&error=${errorMsg}`, process.env.NEXT_PUBLIC_BASE_URL),
+                303
             );
         }
 
     } catch (error) {
         console.error('PayU Callback Error:', error);
         return NextResponse.redirect(
-            new URL(`/payment-failed?error=server_error`, process.env.NEXT_PUBLIC_BASE_URL)
+            new URL(`/payment-failed?error=server_error`, process.env.NEXT_PUBLIC_BASE_URL),
+            303
         );
     }
 }
