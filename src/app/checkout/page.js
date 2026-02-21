@@ -127,6 +127,10 @@ export default function CheckoutPage() {
             });
 
             document.body.appendChild(form);
+
+            // Save pending order ID so cart can auto-clear even if user closes browser before redirect
+            localStorage.setItem('akuzie_pending_order', orderId);
+
             form.submit();
 
         } catch (error) {

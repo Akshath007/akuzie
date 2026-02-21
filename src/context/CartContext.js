@@ -1,6 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const CartContext = createContext();
 
@@ -11,10 +13,72 @@ export function CartProvider({ children }) {
     useEffect(() => {
         const storedCart = localStorage.getItem('akuzie_cart');
         if (storedCart) {
-            setCart(JSON.parse(storedCart));
+            const parsedCart = JSON.parse(storedCart);
+            setCart(parsedCart);
+
+            // Check if any cart items are already sold in Firestore
+            if (parsedCart.length > 0) {
+                syncCartWithStore(parsedCart);
+            }
         }
+
+        // Check if there's a completed pending order (user closed browser before redirect)
+        const pendingOrder = localStorage.getItem('akuzie_pending_order');
+        if (pendingOrder) {
+            checkPendingOrder(pendingOrder);
+        }
+
         setIsLoaded(true);
     }, []);
+
+    // Check each cart item's status in Firestore; remove sold items
+    const syncCartWithStore = async (cartItems) => {
+        try {
+            const soldIds = [];
+            await Promise.all(
+                cartItems.map(async (item) => {
+                    try {
+                        const paintingRef = doc(db, 'paintings', item.id);
+                        const snap = await getDoc(paintingRef);
+                        if (snap.exists() && snap.data().status === 'sold') {
+                            soldIds.push(item.id);
+                        }
+                    } catch (e) {
+                        // Ignore individual fetch errors
+                    }
+                })
+            );
+
+            if (soldIds.length > 0) {
+                setCart(prev => {
+                    const filtered = prev.filter(item => !soldIds.includes(item.id));
+                    localStorage.setItem('akuzie_cart', JSON.stringify(filtered));
+                    return filtered;
+                });
+            }
+        } catch (e) {
+            console.error('Cart sync error:', e);
+        }
+    };
+
+    // Check if a pending order was successfully paid (user closed before redirect)
+    const checkPendingOrder = async (orderId) => {
+        try {
+            const orderRef = doc(db, 'orders', orderId);
+            const snap = await getDoc(orderRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.paymentStatus === 'paid') {
+                    // Order was paid — clear the cart and pending flag
+                    setCart([]);
+                    localStorage.setItem('akuzie_cart', JSON.stringify([]));
+                    localStorage.removeItem('akuzie_pending_order');
+                }
+            }
+        } catch (e) {
+            console.error('Pending order check error:', e);
+        }
+    };
 
     useEffect(() => {
         if (isLoaded) {
@@ -35,12 +99,20 @@ export function CartProvider({ children }) {
         setCart((prev) => prev.filter((item) => item.id !== id));
     };
 
+    // Update a cart item with fresh data from Firestore (e.g. price changes)
+    const updateCartItem = (id, newData) => {
+        setCart((prev) => prev.map(item =>
+            item.id === id ? { ...item, ...newData } : item
+        ));
+    };
+
     const clearCart = () => {
         setCart([]);
+        localStorage.removeItem('akuzie_pending_order');
     };
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, isLoaded }}>
+        <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateCartItem, clearCart, isLoaded }}>
             {children}
         </CartContext.Provider>
     );

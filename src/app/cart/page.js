@@ -11,14 +11,14 @@ import { useState, useEffect } from 'react';
 import { getPainting } from '@/lib/data';
 
 export default function CartPage() {
-    const { cart, removeFromCart, isLoaded } = useCart();
+    const { cart, removeFromCart, updateCartItem, isLoaded } = useCart();
     const { user, loginWithGoogle } = useAuth();
     const [availability, setAvailability] = useState({});
     const [verifying, setVerifying] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        const verifyCartItems = async () => {
+        const verifyAndSyncCartItems = async () => {
             if (cart.length === 0) {
                 setVerifying(false);
                 return;
@@ -29,11 +29,28 @@ export default function CartPage() {
                 const checks = cart.map(item => getPainting(item.id));
                 const results = await Promise.all(checks);
 
-                results.forEach((item, index) => {
-                    if (item) {
-                        statusMap[item.id] = item.status;
+                results.forEach((freshItem, index) => {
+                    const cartItem = cart[index];
+                    if (freshItem) {
+                        statusMap[freshItem.id] = freshItem.status;
+                        // Sync latest data (price, title, images, etc.) from Firestore
+                        if (
+                            freshItem.price !== cartItem.price ||
+                            freshItem.title !== cartItem.title ||
+                            JSON.stringify(freshItem.images) !== JSON.stringify(cartItem.images) ||
+                            freshItem.medium !== cartItem.medium ||
+                            freshItem.size !== cartItem.size
+                        ) {
+                            updateCartItem(cartItem.id, {
+                                price: freshItem.price,
+                                title: freshItem.title,
+                                images: freshItem.images,
+                                medium: freshItem.medium,
+                                size: freshItem.size,
+                            });
+                        }
                     } else {
-                        statusMap[cart[index].id] = 'unavailable';
+                        statusMap[cartItem.id] = 'unavailable';
                     }
                 });
                 setAvailability(statusMap);
@@ -45,9 +62,9 @@ export default function CartPage() {
         };
 
         if (isLoaded) {
-            verifyCartItems();
+            verifyAndSyncCartItems();
         }
-    }, [cart, isLoaded]);
+    }, [isLoaded]);
 
     if (!isLoaded) return null;
 
@@ -143,7 +160,7 @@ export default function CartPage() {
                                 <div className="flex justify-end">
                                     <button
                                         onClick={() => removeFromCart(item.id)}
-                                        className="text-[10px] uppercase tracking-widest text-stone-400 hover:text-red-500 flex items-center gap-2 transition-colors font-bold"
+                                        className="px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 rounded-lg flex items-center gap-2 transition-colors text-xs font-bold uppercase tracking-widest"
                                     >
                                         <Trash2 size={14} /> Remove
                                     </button>
