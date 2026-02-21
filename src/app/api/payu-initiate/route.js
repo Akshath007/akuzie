@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { getPayUConfig, generatePayUHash, generateTxnId } from '@/lib/payu';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request) {
     try {
         const body = await request.json();
         const { orderId, customerName, customerEmail, customerPhone, amount, productinfo } = body;
+
+        // Rate limiting (max 10 checkout attempts per minute per IP)
+        const limiter = await rateLimit(request, 10);
+        if (!limiter.success) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
 
         if (!orderId || !amount || amount <= 0) {
             return NextResponse.json({ error: 'Missing orderId or invalid amount' }, { status: 400 });

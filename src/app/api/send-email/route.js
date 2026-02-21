@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request) {
+    // Rate limit public email endpoints (max 5 per minute)
+    const limiter = await rateLimit(request, 5);
+    if (!limiter.success) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { to, subject, html } = await request.json();
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
