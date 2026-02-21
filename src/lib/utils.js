@@ -22,4 +22,6 @@ export const ORDER_STATUS = {
     PAYMENT_PENDING: 'payment_pending',
     PAID: 'paid',
     SHIPPED: 'shipped',
+    DELIVERED: 'delivered',
+    CANCELLED: 'cancelled'
 };
