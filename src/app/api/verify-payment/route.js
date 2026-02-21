@@ -1,8 +1,8 @@
 
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { markItemsAsSold } from '@/lib/data';
+import { adminDb } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
+import { markItemsAsSoldAdmin } from '@/lib/data-admin';
 import { templates } from '@/lib/email';
 
 /**
@@ -19,10 +19,10 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
         }
 
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await getDoc(orderRef);
+        const orderRef = adminDb.collection('orders').doc(orderId);
+        const orderSnap = await orderRef.get();
 
-        if (!orderSnap.exists()) {
+        if (!orderSnap.exists) {
             return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
@@ -35,14 +35,14 @@ export async function POST(req) {
 
         // Admin manual confirmation
         if (paymentId) {
-            await updateDoc(orderRef, {
+            await orderRef.update({
                 paymentStatus: 'paid',
                 paymentId: paymentId,
-                paidAt: serverTimestamp(),
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
                 method: currentOrderData.method || 'manual_upi',
             });
 
-            await markItemsAsSold(orderId);
+            await markItemsAsSoldAdmin(orderId);
 
             // Send confirmation email
             try {

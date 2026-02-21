@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { markItemsAsSold } from '@/lib/data';
+import { adminDb } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
+import { markItemsAsSoldAdmin } from '@/lib/data-admin';
 import { templates } from '@/lib/email';
 import { getPayUConfig, validatePayUResponseHash } from '@/lib/payu';
 
@@ -71,10 +71,10 @@ export async function POST(request) {
         }
 
         // Get order from Firestore
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await getDoc(orderRef);
+        const orderRef = adminDb.collection('orders').doc(orderId);
+        const orderSnap = await orderRef.get();
 
-        if (!orderSnap.exists()) {
+        if (!orderSnap.exists) {
             console.error('Order not found in Firestore:', orderId);
             return NextResponse.redirect(
                 new URL(`/payment-failed?error=order_not_found`, process.env.NEXT_PUBLIC_BASE_URL),
@@ -100,7 +100,7 @@ export async function POST(request) {
             if (expectedAmount !== receivedAmount) {
                 console.error(`Amount mismatch! Expected: ${expectedAmount}, Received: ${receivedAmount}`);
                 // Mark as failed due to fraud attempt
-                await updateDoc(orderRef, {
+                await orderRef.update({
                     paymentStatus: 'failed',
                     paymentError: 'Amount mismatch detected. Potential tampering.',
                     payuTxnId: txnid,
@@ -113,18 +113,18 @@ export async function POST(request) {
             }
 
             // Payment successful
-            await updateDoc(orderRef, {
+            await orderRef.update({
                 paymentStatus: 'paid',
                 paymentId: mihpayid,
                 payuTxnId: txnid,
                 bankRefNum: bank_ref_num || '',
                 paymentMode: mode || 'online',
-                paidAt: serverTimestamp(),
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
                 method: 'payu_online',
             });
 
             // Mark items as sold
-            await markItemsAsSold(orderId);
+            await markItemsAsSoldAdmin(orderId);
 
             // Send confirmation email
             try {
@@ -148,7 +148,7 @@ export async function POST(request) {
 
         } else {
             // Payment failed or pending
-            await updateDoc(orderRef, {
+            await orderRef.update({
                 paymentStatus: status === 'pending' ? 'pending' : 'failed',
                 payuTxnId: txnid,
                 paymentError: error_Message || 'Payment was not successful',
