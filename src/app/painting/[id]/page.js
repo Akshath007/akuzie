@@ -10,7 +10,7 @@ import ImageGallery from '@/components/ImageGallery';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import WishlistButton from '@/components/WishlistButton';
-
+import ShareButton from '@/components/ShareButton';
 export async function generateMetadata({ params }) {
     const { id } = await params;
     const painting = await getPainting(id);
@@ -91,7 +91,14 @@ export default async function PaintingPage({ params }) {
                                     <AddToCartButton painting={painting} />
                                 )}
                             </div>
-                            <WishlistButton painting={painting} />
+                            <div className="flex gap-4">
+                                <WishlistButton painting={painting} />
+                                <ShareButton
+                                    title={`Akuzie: ${painting.title}`}
+                                    text={`Check out this amazing artwork: ${painting.title}`}
+                                    url={`https://akuzie.in/painting/${painting.id}`}
+                                />
+                            </div>
                         </div>
 
                         {/* Accordions */}

@@ -10,6 +10,7 @@ import { placeBid } from '@/lib/auction-data';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Timer, Gavel, ArrowRight, AlertCircle, ShieldCheck, Clock, TrendingUp } from 'lucide-react';
+import ShareButton from '@/components/ShareButton';
 
 export default function AuctionDetailPage() {
     const { id } = useParams();
@@ -185,7 +186,14 @@ export default function AuctionDetailPage() {
                     {/* Right: Info & Bidding */}
                     <div className="flex flex-col h-full">
                         <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-4 leading-tight">{auction.title}</h1>
-                        <p className="text-gray-500 mb-8 leading-relaxed font-light">{auction.description}</p>
+                        <p className="text-gray-500 mb-6 leading-relaxed font-light">{auction.description}</p>
+                        <div className="mb-8">
+                            <ShareButton
+                                title={`Akuzie Auction: ${auction.title}`}
+                                text={`Check out this live auction on Akuzie: ${auction.title}`}
+                                url={`https://akuzie.in/auction/${auction.id}`}
+                            />
+                        </div>
 
                         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
 
