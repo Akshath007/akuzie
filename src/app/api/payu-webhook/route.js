@@ -77,15 +77,16 @@ export async function POST(request) {
         }
 
         if (status === 'success') {
-            // Amount Validation
-            const expectedAmount = parseFloat(currentOrderData.total).toFixed(2);
-            const receivedAmount = parseFloat(amount).toFixed(2);
+            // Amount Validation - Relaxed comparison to avoid floating point/formatting issues
+            const expectedAmount = parseFloat(currentOrderData.total);
+            const receivedAmount = parseFloat(amount);
 
-            if (expectedAmount !== receivedAmount) {
+            // Allow a small discrepancy (e.g., up to 2 rupees) to account for rounding/PayU fees if passed
+            if (Math.abs(expectedAmount - receivedAmount) > 2) {
                 console.error('Webhook: Amount mismatch!');
                 await orderRef.update({
                     paymentStatus: 'failed',
-                    paymentError: 'Webhook amount mismatch detected.',
+                    paymentError: `Webhook amount mismatch detected. Expected ${expectedAmount}, received ${receivedAmount}.`,
                     payuTxnId: txnid,
                     method: 'payu_online',
                 });

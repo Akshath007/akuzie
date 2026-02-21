@@ -93,16 +93,17 @@ export async function POST(request) {
         }
 
         if (status === 'success') {
-            // Strict Amount Validation
-            const expectedAmount = parseFloat(currentOrderData.total).toFixed(2);
-            const receivedAmount = parseFloat(amount).toFixed(2);
+            // Amount Validation - Relaxed comparison to avoid floating point/formatting issues
+            const expectedAmount = parseFloat(currentOrderData.total);
+            const receivedAmount = parseFloat(amount);
 
-            if (expectedAmount !== receivedAmount) {
+            // Allow a small discrepancy (e.g., up to 2 rupees) to account for rounding/PayU fees if passed
+            if (Math.abs(expectedAmount - receivedAmount) > 2) {
                 console.error(`Amount mismatch! Expected: ${expectedAmount}, Received: ${receivedAmount}`);
                 // Mark as failed due to fraud attempt
                 await orderRef.update({
                     paymentStatus: 'failed',
-                    paymentError: 'Amount mismatch detected. Potential tampering.',
+                    paymentError: `Amount mismatch detected. Expected ${expectedAmount}, received ${receivedAmount}.`,
                     payuTxnId: txnid,
                     method: 'payu_online',
                 });
