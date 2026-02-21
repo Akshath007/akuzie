@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { Loader2, Sparkles, Package, Mail, Truck, Heart } from 'lucide-react';
 import Link from 'next/link';
@@ -11,6 +11,17 @@ function PaymentSuccessContent() {
     const { clearCart } = useCart();
     const [orderId, setOrderId] = useState(null);
     const [showConfetti, setShowConfetti] = useState(false);
+    const router = useRouter();
+
+    // Prevent back navigation to PayU or Checkout
+    useEffect(() => {
+        window.history.pushState(null, '', window.location.href);
+        const handlePopState = () => {
+            router.replace('/');
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
 
     useEffect(() => {
         const id = searchParams.get('orderId');
@@ -64,9 +75,9 @@ function PaymentSuccessContent() {
             )}
 
             {/* Decorative Background Elements */}
-            <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-200/30 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-violet-200/20 rounded-full blur-3xl" />
-            <div className="absolute top-40 right-20 w-48 h-48 bg-amber-200/20 rounded-full blur-2xl" />
+            <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-40 right-20 w-48 h-48 bg-amber-200/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 pt-32 pb-24 px-6">
                 <div className="max-w-2xl mx-auto text-center">
@@ -111,8 +122,8 @@ function PaymentSuccessContent() {
                             ].map((step, i) => (
                                 <div key={i} className="flex items-start gap-5 group">
                                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${step.done
-                                            ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200'
-                                            : `bg-${step.color}-50 border border-${step.color}-100`
+                                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200'
+                                        : `bg-${step.color}-50 border border-${step.color}-100`
                                         }`}>
                                         <step.icon size={20} className={step.done ? 'text-white' : `text-${step.color}-500`} />
                                     </div>

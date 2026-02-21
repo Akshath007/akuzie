@@ -1,12 +1,24 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ShoppingCart, Home, LifeBuoy } from 'lucide-react';
 
 function PaymentFailedContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
+
+    // Prevent back navigation to PayU or Checkout
+    useEffect(() => {
+        window.history.pushState(null, '', window.location.href);
+        const handlePopState = () => {
+            router.replace('/');
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
+
     const orderId = searchParams.get('orderId');
     const error = searchParams.get('error');
 

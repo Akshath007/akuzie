@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -106,10 +106,10 @@ export function CartProvider({ children }) {
         ));
     };
 
-    const clearCart = () => {
+    const clearCart = useCallback(() => {
         setCart([]);
         localStorage.removeItem('akuzie_pending_order');
-    };
+    }, []);
 
     return (
         <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateCartItem, clearCart, isLoaded }}>

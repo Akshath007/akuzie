@@ -93,6 +93,25 @@ export async function POST(request) {
         }
 
         if (status === 'success') {
+            // Strict Amount Validation
+            const expectedAmount = parseFloat(currentOrderData.total).toFixed(2);
+            const receivedAmount = parseFloat(amount).toFixed(2);
+
+            if (expectedAmount !== receivedAmount) {
+                console.error(`Amount mismatch! Expected: ${expectedAmount}, Received: ${receivedAmount}`);
+                // Mark as failed due to fraud attempt
+                await updateDoc(orderRef, {
+                    paymentStatus: 'failed',
+                    paymentError: 'Amount mismatch detected. Potential tampering.',
+                    payuTxnId: txnid,
+                    method: 'payu_online',
+                });
+                return NextResponse.redirect(
+                    new URL(`/payment-failed?orderId=${orderId}&error=amount_mismatch`, process.env.NEXT_PUBLIC_BASE_URL),
+                    303
+                );
+            }
+
             // Payment successful
             await updateDoc(orderRef, {
                 paymentStatus: 'paid',
