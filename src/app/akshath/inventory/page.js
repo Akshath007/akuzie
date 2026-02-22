@@ -7,23 +7,34 @@ import { useWorkspace } from '@/context/WorkspaceContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { Trash2, Edit, ImageIcon, Package, Plus } from 'lucide-react';
+import { Trash2, Edit, ImageIcon, Package, Plus, AlertCircle } from 'lucide-react';
 
 export default function InventoryPage() {
     const { user } = useAuth();
     const { activeWorkspace, workspaceConfig } = useWorkspace();
     const [paintings, setPaintings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
 
     const fetchPaintings = async () => {
         if (!isSuperAdmin && !workspaceConfig) return;
-        // Fetch only items matching this workspace's category (or all if superadmin)
-        const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
-        const data = await getPaintings(fetchCat);
-        setPaintings(data);
-        setLoading(false);
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            // Fetch only items matching this workspace's category (or all if superadmin)
+            const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
+            const data = await getPaintings(fetchCat);
+            setPaintings(data || []);
+        } catch (err) {
+            console.error('Inventory fetch error:', err);
+            setError(err.message || 'Failed to load inventory.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -49,6 +60,18 @@ export default function InventoryPage() {
         <div className="flex h-screen items-center justify-center bg-gray-50/50">
             <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        </div>
+    );
+
+    if (error) return (
+        <div className="flex h-screen items-center justify-center bg-gray-50/50">
+            <div className="flex flex-col items-center gap-4 text-center max-w-md">
+                <AlertCircle size={48} className="text-red-400" />
+                <p className="text-gray-600 text-sm">{error}</p>
+                <button onClick={fetchPaintings} className="px-4 py-2 bg-gray-900 text-white rounded-lg text-xs uppercase tracking-widest">
+                    Retry
+                </button>
             </div>
         </div>
     );
@@ -133,7 +156,7 @@ export default function InventoryPage() {
                             {paintings.length === 0 && (
                                 <tr>
                                     <td colSpan="4" className="py-16 text-center text-gray-400 italic">
-                                        No {workspaceConfig?.label?.toLowerCase()} items yet. Add your first one!
+                                        No {isSuperAdmin ? '' : workspaceConfig?.label?.toLowerCase()} items yet. Add your first one!
                                     </td>
                                 </tr>
                             )}

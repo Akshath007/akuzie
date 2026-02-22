@@ -5,7 +5,7 @@ import { getPaintings, getOrders } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { TrendingUp, ImageIcon, Package, ShoppingBag } from 'lucide-react';
+import { TrendingUp, ImageIcon, Package, ShoppingBag, AlertCircle } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
@@ -14,44 +14,57 @@ export default function DashboardPage() {
     const [paintings, setPaintings] = useState([]);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
 
     useEffect(() => {
-        const fetchPaintings = async () => {
-            const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+        const fetchData = async () => {
             // Non-super admins MUST have a workspaceConfig before fetching
             if (!isSuperAdmin && !workspaceConfig) return;
 
             setLoading(true);
-            const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
-            const [paintingsData, ordersData] = await Promise.all([
-                getPaintings(fetchCat),
-                getOrders(),
-            ]);
+            setError(null);
 
-            setPaintings(paintingsData);
+            try {
+                const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
 
-            // Filter orders by workspace category (unless super admin)
-            let filteredOrders = ordersData;
-            if (!isSuperAdmin) {
-                filteredOrders = ordersData.filter(order => {
-                    // Check if order belongs to this workspace
-                    if (order.workspace) return order.workspace === activeWorkspace;
-                    // Legacy orders: check item categories
-                    if (order.items?.length > 0) {
-                        return order.items.some(item =>
-                            (item.category || 'painting') === workspaceConfig.category
-                        );
-                    }
-                    return false;
-                });
+                // Fetch paintings and orders in parallel
+                const [paintingsData, ordersData] = await Promise.all([
+                    getPaintings(fetchCat),
+                    getOrders(),
+                ]);
+
+                setPaintings(paintingsData || []);
+
+                // Filter orders by workspace category (unless super admin)
+                let filteredOrders = ordersData || [];
+                if (!isSuperAdmin && activeWorkspace) {
+                    filteredOrders = filteredOrders.filter(order => {
+                        // Check if order belongs to this workspace
+                        if (order.workspace) return order.workspace === activeWorkspace;
+                        // Legacy orders: check item categories
+                        if (order.items?.length > 0) {
+                            return order.items.some(item =>
+                                (item.category || 'painting') === workspaceConfig.category
+                            );
+                        }
+                        // Legacy orders without workspace or category — show in art by default
+                        return activeWorkspace === 'art';
+                    });
+                }
+
+                setOrders(filteredOrders);
+            } catch (err) {
+                console.error('Dashboard fetch error:', err);
+                setError(err.message || 'Failed to load dashboard data.');
+            } finally {
+                setLoading(false);
             }
+        };
 
-            setOrders(filteredOrders);
-            setLoading(false);
-        }
-
-        fetchPaintings();
-    }, [activeWorkspace, workspaceConfig, user]);
+        fetchData();
+    }, [activeWorkspace, workspaceConfig, user, isSuperAdmin]);
 
     // Computed Stats
     const totalValue = paintings
@@ -71,18 +84,30 @@ export default function DashboardPage() {
         </div>
     );
 
+    if (error) return (
+        <div className="flex h-screen items-center justify-center bg-gray-50/50">
+            <div className="flex flex-col items-center gap-4 text-center max-w-md">
+                <AlertCircle size={48} className="text-red-400" />
+                <p className="text-gray-600 text-sm">{error}</p>
+                <button onClick={() => window.location.reload()} className="px-4 py-2 bg-gray-900 text-white rounded-lg text-xs uppercase tracking-widest">
+                    Retry
+                </button>
+            </div>
+        </div>
+    );
+
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-serif text-gray-900 flex items-center gap-3">
-                        {user?.email !== 'akshathhp123@gmail.com' && workspaceConfig && (
+                        {!isSuperAdmin && workspaceConfig && (
                             <span className="text-3xl">{workspaceConfig.icon}</span>
                         )}
-                        {user?.email === 'akshathhp123@gmail.com' ? 'Global' : workspaceConfig?.label} Dashboard
+                        {isSuperAdmin ? 'Global' : workspaceConfig?.label} Dashboard
                     </h1>
-                    <p className="text-gray-500">Overview of {user?.email === 'akshathhp123@gmail.com' ? 'all workspaces' : `your ${workspaceConfig?.label?.toLowerCase()} workspace`}.</p>
+                    <p className="text-gray-500">Overview of {isSuperAdmin ? 'all workspaces' : `your ${workspaceConfig?.label?.toLowerCase()} workspace`}.</p>
                 </div>
             </div>
 

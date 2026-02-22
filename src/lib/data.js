@@ -33,28 +33,58 @@ export async function logAdminAction(adminUser, action, targetId, details = {}) 
 export async function getPaintings(category = null, maxItems = null) {
     const paintingsCol = collection(db, "paintings");
 
-    // Build query with server-side filtering when possible
-    const constraints = [orderBy("createdAt", "desc")];
+    try {
+        // Build query with server-side filtering when possible
+        const constraints = [orderBy("createdAt", "desc")];
 
-    if (category) {
-        constraints.push(where("category", "==", category));
+        if (category) {
+            constraints.push(where("category", "==", category));
+        }
+        if (maxItems) {
+            constraints.push(firestoreLimit(maxItems));
+        }
+
+        const q = query(paintingsCol, ...constraints);
+        const snapshot = await getDocs(q);
+
+        return snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                category: data.category || 'painting',
+                createdAt: safeToMillis(data.createdAt),
+            };
+        });
+    } catch (err) {
+        // Fallback: if composite index is missing, fetch all and filter client-side
+        console.warn('getPaintings indexed query failed, falling back to client-side filter:', err.message);
+
+        const fallbackConstraints = [orderBy("createdAt", "desc")];
+        if (maxItems) {
+            fallbackConstraints.push(firestoreLimit(maxItems));
+        }
+
+        const q = query(paintingsCol, ...fallbackConstraints);
+        const snapshot = await getDocs(q);
+
+        let results = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                category: data.category || 'painting',
+                createdAt: safeToMillis(data.createdAt),
+            };
+        });
+
+        // Client-side category filter
+        if (category) {
+            results = results.filter(item => item.category === category);
+        }
+
+        return results;
     }
-    if (maxItems) {
-        constraints.push(firestoreLimit(maxItems));
-    }
-
-    const q = query(paintingsCol, ...constraints);
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            ...data,
-            category: data.category || 'painting',
-            createdAt: safeToMillis(data.createdAt),
-        };
-    });
 }
 
 /**
