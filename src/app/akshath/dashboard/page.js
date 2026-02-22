@@ -16,9 +16,10 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function fetchData() {
+        const fetchPaintings = async () => {
             const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-            if (!isSuperAdmin && (!activeWorkspace || !workspaceConfig)) return;
+            // Non-super admins MUST have a workspaceConfig before fetching
+            if (!isSuperAdmin && !workspaceConfig) return;
 
             setLoading(true);
             const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
@@ -49,7 +50,7 @@ export default function DashboardPage() {
             setLoading(false);
         }
 
-        fetchData();
+        fetchPaintings();
     }, [activeWorkspace, workspaceConfig, user]);
 
     // Computed Stats

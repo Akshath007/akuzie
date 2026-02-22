@@ -41,11 +41,12 @@ export default function OrdersPage() {
         // Filter orders by workspace (unless super admin)
         if (!isSuperAdmin) {
             filtered = data.filter(order => {
+                const configCategory = workspaceConfig?.category || (activeWorkspace === 'art' ? 'painting' : 'crochet');
                 if (order.workspace) return order.workspace === activeWorkspace;
                 // Legacy: check item categories
                 if (order.items?.length > 0) {
                     return order.items.some(item =>
-                        (item.category || 'painting') === workspaceConfig?.category
+                        (item.category || 'painting') === configCategory
                     );
                 }
                 return false;
@@ -60,8 +61,8 @@ export default function OrdersPage() {
 
     useEffect(() => {
         const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-        if (activeWorkspace || isSuperAdmin) fetchOrders();
-    }, [activeWorkspace, user]);
+        if (isSuperAdmin || activeWorkspace) fetchOrders();
+    }, [activeWorkspace, workspaceConfig, user]);
 
     const handleStatusChange = async (id, status) => {
         // Optimistic update
