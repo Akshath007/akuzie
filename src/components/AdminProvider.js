@@ -1,19 +1,34 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminProvider({ children }) {
     const { user, isAdmin, loading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
-        if (!loading && !isAdmin) {
-            router.push('/');
+        if (!loading) {
+            if (!user) {
+                // Not logged in
+                if (pathname !== '/akshath/login') {
+                    router.push('/akshath/login');
+                }
+            } else {
+                // Logged in
+                if (!isAdmin) {
+                    // Normal user trying to access admin
+                    router.push('/');
+                } else if (pathname === '/akshath/login') {
+                    // Admin already logged in but on login page
+                    router.push('/akshath/dashboard');
+                }
+            }
         }
-    }, [isAdmin, loading, router]);
+    }, [user, isAdmin, loading, pathname, router]);
 
     if (loading) {
         return (
@@ -23,7 +38,9 @@ export default function AdminProvider({ children }) {
         );
     }
 
-    if (!isAdmin) return null;
+    // Prevent rendering children if the user is being redirected
+    if (!user && pathname !== '/akshath/login') return null;
+    if (user && !isAdmin) return null;
 
     return <>{children}</>;
 }
