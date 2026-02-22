@@ -22,67 +22,62 @@ export async function getServerPaintings(category = null, limitCount = 50) {
     if (cached) return cached;
 
     try {
-        let ref = adminDb.collection('paintings').orderBy('createdAt', 'desc');
-
-        // Try server-side category filter first
-        if (category) {
-            const filteredRef = ref.where('category', '==', category).limit(limitCount);
-            const filteredSnapshot = await filteredRef.get();
-
-            // If we got results, use them
-            if (filteredSnapshot.docs.length > 0) {
-                const items = filteredSnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        ...data,
-                        category: data.category || 'painting',
-                        createdAt: data.createdAt?.toMillis?.() || data.createdAt?._seconds * 1000 || null,
-                    };
-                });
-                dataCache.set(cacheKey, items);
-                return items;
-            }
-
-            // Fallback: items may not have a 'category' field at all
-            // Fetch all and filter client-side, treating missing category as 'painting'
-            const allRef = adminDb.collection('paintings').orderBy('createdAt', 'desc').limit(limitCount * 2);
-            const allSnapshot = await allRef.get();
-            const items = allSnapshot.docs
-                .map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        ...data,
-                        category: data.category || 'painting',
-                        createdAt: data.createdAt?.toMillis?.() || data.createdAt?._seconds * 1000 || null,
-                    };
-                })
-                .filter(item => item.category === category)
-                .slice(0, limitCount);
-
-            dataCache.set(cacheKey, items);
-            return items;
-        }
-
-        // No category filter — fetch all
-        ref = ref.limit(limitCount);
+        // Always fetch all paintings first — most reliable approach
+        const ref = adminDb.collection('paintings').orderBy('createdAt', 'desc').limit(limitCount * 2);
         const snapshot = await ref.get();
-        const items = snapshot.docs.map(doc => {
+
+        let items = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
                 ...data,
-                category: data.category || 'painting',
+                category: data.category || 'painting', // Default to 'painting' if field is missing
                 createdAt: data.createdAt?.toMillis?.() || data.createdAt?._seconds * 1000 || null,
             };
         });
+
+        // Client-side category filter
+        if (category) {
+            items = items.filter(item => item.category === category).slice(0, limitCount);
+        } else {
+            items = items.slice(0, limitCount);
+        }
 
         dataCache.set(cacheKey, items);
         return items;
     } catch (error) {
         console.error('getServerPaintings error:', error);
-        return [];
+
+        // Last resort fallback: try without orderBy
+        try {
+            const fallbackRef = adminDb.collection('paintings').limit(limitCount * 2);
+            const fallbackSnap = await fallbackRef.get();
+
+            let items = fallbackSnap.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    category: data.category || 'painting',
+                    createdAt: data.createdAt?.toMillis?.() || data.createdAt?._seconds * 1000 || null,
+                };
+            });
+
+            // Sort client-side
+            items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            if (category) {
+                items = items.filter(item => item.category === category).slice(0, limitCount);
+            } else {
+                items = items.slice(0, limitCount);
+            }
+
+            dataCache.set(cacheKey, items);
+            return items;
+        } catch (fallbackError) {
+            console.error('getServerPaintings fallback error:', fallbackError);
+            return [];
+        }
     }
 }
 
