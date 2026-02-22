@@ -46,6 +46,12 @@ export default function LiveBidNotif() {
                 }
             }
             isInitial = false;
+        }, (error) => {
+            // Silently handle Firestore listener errors (network timeouts, QUIC errors)
+            // The SDK will automatically reconnect — no user action needed
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('LiveBidNotif listener error (auto-reconnecting):', error.code);
+            }
         });
 
         return () => unsubscribe();
