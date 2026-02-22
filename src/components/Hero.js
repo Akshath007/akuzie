@@ -28,22 +28,14 @@ export default function Hero() {
             {/* Deep Charcoal Gradient Base */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fafafa] z-10 pointer-events-none"></div>
 
-            {/* Animated Glow Blobs */}
-            <motion.div
-                animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.5, 0.3],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-600 rounded-full blur-[120px] opacity-30"
+            {/* Animated Glow Blobs — CSS animations for GPU-composited performance */}
+            <div
+                className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-600 rounded-full blur-[120px] opacity-30 will-change-transform"
+                style={{ animation: 'heroBlob1 8s ease-in-out infinite' }}
             />
-            <motion.div
-                animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.2, 0.4, 0.2],
-                }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600 rounded-full blur-[100px] opacity-20"
+            <div
+                className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600 rounded-full blur-[100px] opacity-20 will-change-transform"
+                style={{ animation: 'heroBlob2 10s ease-in-out 1s infinite' }}
             />
 
             {/* Grid Pattern Overlay */}

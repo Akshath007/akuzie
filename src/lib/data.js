@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, getDocs, getDoc, doc, query, orderBy, where, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, limit as firestoreLimit } from "firebase/firestore";
 import { PAINTING_STATUS, ORDER_STATUS } from "./utils";
 
 export const safeToMillis = (dateValue) => {
@@ -29,31 +29,55 @@ export async function logAdminAction(adminUser, action, targetId, details = {}) 
     }
 }
 
-// Paintings and Crochet
-export async function getPaintings(category = null) {
+// Paintings and Crochet — Optimized with where() + limit()
+export async function getPaintings(category = null, maxItems = null) {
     const paintingsCol = collection(db, "paintings");
 
-    // Always query ALL items sorted by date to avoid composite index requirements
-    const q = query(paintingsCol, orderBy("createdAt", "desc"));
+    // Build query with server-side filtering when possible
+    const constraints = [orderBy("createdAt", "desc")];
+
+    if (category) {
+        constraints.push(where("category", "==", category));
+    }
+    if (maxItems) {
+        constraints.push(firestoreLimit(maxItems));
+    }
+
+    const q = query(paintingsCol, ...constraints);
     const snapshot = await getDocs(q);
 
-    const items = snapshot.docs.map(doc => {
+    return snapshot.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
-            // Backwards compatibility: Default to 'painting' if no category
             category: data.category || 'painting',
             createdAt: safeToMillis(data.createdAt),
         };
     });
+}
 
-    // In-memory filtering
-    if (category) {
-        return items.filter(item => item.category === category);
+/**
+ * Fetch paintings via the cached /api/paintings endpoint.
+ * Best for public pages — leverages server-side LRU cache + HTTP caching.
+ * Falls back to direct Firestore query on error.
+ */
+export async function getPaintingsCached(category = null, maxItems = 50) {
+    try {
+        const params = new URLSearchParams();
+        if (category) params.set('category', category);
+        if (maxItems) params.set('limit', String(maxItems));
+
+        const res = await fetch(`/api/paintings?${params.toString()}`);
+        if (!res.ok) throw new Error('API error');
+
+        const { paintings } = await res.json();
+        return paintings;
+    } catch (err) {
+        // Fallback to direct Firestore on API failure
+        console.warn('Cached API failed, falling back to direct query:', err);
+        return getPaintings(category, maxItems);
     }
-
-    return items;
 }
 
 export async function getPainting(id) {

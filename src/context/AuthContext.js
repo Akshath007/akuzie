@@ -18,28 +18,34 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Fetch extra user data from Firestore (specifically status)
-                const userRef = doc(db, 'users', user.uid);
-                const userSnap = await getDoc(userRef);
-
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-                    if (data.status === 'blocked') {
-                        await signOut(auth);
-                        setUser(null);
-                        setUserData(null);
-                        alert("Your account has been blocked. Please contact support.");
-                        setLoading(false);
-                        return;
-                    }
-                    setUserData(data);
-                }
+                // Set user immediately so the UI can render without waiting for Firestore
                 setUser(user);
+                setLoading(false);
+
+                // Fetch extra user data from Firestore in the background
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userSnap = await getDoc(userRef);
+
+                    if (userSnap.exists()) {
+                        const data = userSnap.data();
+                        if (data.status === 'blocked') {
+                            await signOut(auth);
+                            setUser(null);
+                            setUserData(null);
+                            alert("Your account has been blocked. Please contact support.");
+                            return;
+                        }
+                        setUserData(data);
+                    }
+                } catch (err) {
+                    console.error("Error fetching user data:", err);
+                }
             } else {
                 setUser(null);
                 setUserData(null);
+                setLoading(false);
             }
-            setLoading(false);
         });
         return () => unsubscribe();
     }, []);

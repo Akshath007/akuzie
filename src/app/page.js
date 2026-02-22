@@ -3,9 +3,9 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { ArrowRight, Sparkles, Paintbrush, ShieldCheck, Heart, ExternalLink } from 'lucide-react';
-import { getPaintings } from '@/lib/data';
+import { getPaintingsCached } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
 import { cn, PAINTING_STATUS } from '@/lib/utils';
 import Hero from '@/components/Hero';
@@ -55,12 +55,17 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetch() {
-      // Parallel fetch for 50/50 split
+    let cancelled = false;
+
+    async function fetchData() {
+      // Fetch only 6 items per category via cached API (server-side LRU cache)
+      // Extra buffer of 6 to account for sold items being filtered out
       const [paintingsData, crochetData] = await Promise.all([
-        getPaintings('painting'),
-        getPaintings('crochet')
+        getPaintingsCached('painting', 6),
+        getPaintingsCached('crochet', 6)
       ]);
+
+      if (cancelled) return;
 
       // Filter out sold items
       const availablePaintings = paintingsData.filter(p => p.status !== 'sold');
@@ -81,7 +86,9 @@ export default function Home() {
       setPaintings(mixed);
       setLoading(false);
     }
-    fetch();
+
+    fetchData();
+    return () => { cancelled = true; };
   }, []);
 
 
@@ -91,9 +98,7 @@ export default function Home() {
       {/* 1. HERO SECTION */}
       <Hero />
 
-      {/* 2. EXHIBITION / VALUE SECTION REMOVED AS REQUESTED */}
-
-      {/* 3. FEATURED WORK (The Spotlight) */}
+      {/* 2. FEATURED WORK (The Spotlight) */}
       <section id="new-releases" className="pt-24 pb-32 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
@@ -121,7 +126,7 @@ export default function Home() {
             ) : (
               paintings.map((p, i) => (
                 <FadeIn key={p.id} delay={i * 0.1}>
-                  <PaintingCard painting={p} />
+                  <PaintingCard painting={p} priority={i < 2} />
                 </FadeIn>
               ))
             )}

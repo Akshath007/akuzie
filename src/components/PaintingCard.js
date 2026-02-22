@@ -7,7 +7,7 @@ import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
 import { ExternalLink, Heart } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 
-export default function PaintingCard({ painting }) {
+export default function PaintingCard({ painting, priority = false }) {
     const isSold = painting.status === PAINTING_STATUS.SOLD;
     const { isInWishlist, toggleWishlist } = useWishlist();
 
@@ -32,6 +32,7 @@ export default function PaintingCard({ painting }) {
                             src={painting.images[0]}
                             alt={painting.title}
                             fill
+                            priority={priority}
                             className={cn(
                                 "object-cover transition-transform duration-[1.2s] cubic-bezier(0.22, 1, 0.36, 1) group-hover:scale-110",
                                 isSold ? "grayscale opacity-80" : ""

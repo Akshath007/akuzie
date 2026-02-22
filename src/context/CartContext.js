@@ -16,9 +16,10 @@ export function CartProvider({ children }) {
             const parsedCart = JSON.parse(storedCart);
             setCart(parsedCart);
 
-            // Check if any cart items are already sold in Firestore
+            // Defer sync to after initial render — use idle callback for non-blocking behavior
             if (parsedCart.length > 0) {
-                syncCartWithStore(parsedCart);
+                const scheduleSync = window.requestIdleCallback || ((cb) => setTimeout(cb, 1500));
+                scheduleSync(() => syncCartWithStore(parsedCart));
             }
         }
 

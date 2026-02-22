@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getPaintings } from '@/lib/data';
+import { getPaintingsCached } from '@/lib/data';
 import PaintingCard from '@/components/PaintingCard';
 import Skeleton from '@/components/Skeleton';
 
@@ -14,13 +14,19 @@ function GalleryContent() {
     const category = searchParams.get('category') || 'painting'; // Default to painting if no category
 
     useEffect(() => {
+        let cancelled = false;
+
         async function fetchPaintings() {
             setLoading(true);
-            const data = await getPaintings(category);
-            setPaintings(data);
-            setLoading(false);
+            // Use cached API — limit to 30 items per category
+            const data = await getPaintingsCached(category, 30);
+            if (!cancelled) {
+                setPaintings(data);
+                setLoading(false);
+            }
         }
         fetchPaintings();
+        return () => { cancelled = true; };
     }, [category]);
 
     const filteredPaintings = useMemo(() => {
