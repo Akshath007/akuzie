@@ -35,18 +35,22 @@ export default function OrdersPage() {
 
     const fetchOrders = async () => {
         const data = await getOrders();
+        let filtered = data;
+        const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
 
-        // Filter orders by workspace
-        const filtered = data.filter(order => {
-            if (order.workspace) return order.workspace === activeWorkspace;
-            // Legacy: check item categories
-            if (order.items?.length > 0) {
-                return order.items.some(item =>
-                    (item.category || 'painting') === workspaceConfig?.category
-                );
-            }
-            return false;
-        });
+        // Filter orders by workspace (unless super admin)
+        if (!isSuperAdmin) {
+            filtered = data.filter(order => {
+                if (order.workspace) return order.workspace === activeWorkspace;
+                // Legacy: check item categories
+                if (order.items?.length > 0) {
+                    return order.items.some(item =>
+                        (item.category || 'painting') === workspaceConfig?.category
+                    );
+                }
+                return false;
+            });
+        }
 
         // sort by date desc
         filtered.sort((a, b) => safeToMillis(b.createdAt) - safeToMillis(a.createdAt));
@@ -55,8 +59,9 @@ export default function OrdersPage() {
     };
 
     useEffect(() => {
-        if (activeWorkspace) fetchOrders();
-    }, [activeWorkspace]);
+        const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+        if (activeWorkspace || isSuperAdmin) fetchOrders();
+    }, [activeWorkspace, user]);
 
     const handleStatusChange = async (id, status) => {
         // Optimistic update

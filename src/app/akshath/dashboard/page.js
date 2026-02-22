@@ -17,35 +17,40 @@ export default function DashboardPage() {
 
     useEffect(() => {
         async function fetchData() {
-            if (!activeWorkspace || !workspaceConfig) return;
+            const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+            if (!isSuperAdmin && (!activeWorkspace || !workspaceConfig)) return;
 
             setLoading(true);
+            const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
             const [paintingsData, ordersData] = await Promise.all([
-                getPaintings(workspaceConfig.category),
+                getPaintings(fetchCat),
                 getOrders(),
             ]);
 
             setPaintings(paintingsData);
 
-            // Filter orders by workspace category
-            const filteredOrders = ordersData.filter(order => {
-                // Check if order belongs to this workspace
-                if (order.workspace) return order.workspace === activeWorkspace;
-                // Legacy orders: check item categories
-                if (order.items?.length > 0) {
-                    return order.items.some(item =>
-                        (item.category || 'painting') === workspaceConfig.category
-                    );
-                }
-                return false;
-            });
+            // Filter orders by workspace category (unless super admin)
+            let filteredOrders = ordersData;
+            if (!isSuperAdmin) {
+                filteredOrders = ordersData.filter(order => {
+                    // Check if order belongs to this workspace
+                    if (order.workspace) return order.workspace === activeWorkspace;
+                    // Legacy orders: check item categories
+                    if (order.items?.length > 0) {
+                        return order.items.some(item =>
+                            (item.category || 'painting') === workspaceConfig.category
+                        );
+                    }
+                    return false;
+                });
+            }
 
             setOrders(filteredOrders);
             setLoading(false);
         }
 
         fetchData();
-    }, [activeWorkspace, workspaceConfig]);
+    }, [activeWorkspace, workspaceConfig, user]);
 
     // Computed Stats
     const totalValue = paintings
@@ -71,10 +76,12 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-serif text-gray-900 flex items-center gap-3">
-                        <span className="text-3xl">{workspaceConfig?.icon}</span>
-                        {workspaceConfig?.label} Dashboard
+                        {user?.email !== 'akshathhp123@gmail.com' && workspaceConfig && (
+                            <span className="text-3xl">{workspaceConfig.icon}</span>
+                        )}
+                        {user?.email === 'akshathhp123@gmail.com' ? 'Global' : workspaceConfig?.label} Dashboard
                     </h1>
-                    <p className="text-gray-500">Overview of your {workspaceConfig?.label?.toLowerCase()} workspace.</p>
+                    <p className="text-gray-500">Overview of {user?.email === 'akshathhp123@gmail.com' ? 'all workspaces' : `your ${workspaceConfig?.label?.toLowerCase()} workspace`}.</p>
                 </div>
             </div>
 

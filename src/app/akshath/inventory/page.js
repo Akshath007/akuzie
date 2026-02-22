@@ -15,17 +15,20 @@ export default function InventoryPage() {
     const [paintings, setPaintings] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+
     const fetchPaintings = async () => {
-        if (!workspaceConfig) return;
-        // Fetch only items matching this workspace's category
-        const data = await getPaintings(workspaceConfig.category);
+        if (!isSuperAdmin && !workspaceConfig) return;
+        // Fetch only items matching this workspace's category (or all if superadmin)
+        const fetchCat = isSuperAdmin ? undefined : workspaceConfig.category;
+        const data = await getPaintings(fetchCat);
         setPaintings(data);
         setLoading(false);
     };
 
     useEffect(() => {
         fetchPaintings();
-    }, [activeWorkspace, workspaceConfig]);
+    }, [activeWorkspace, workspaceConfig, isSuperAdmin]);
 
     const handleDelete = async (id) => {
         if (confirm("Delete this masterpiece?")) {
@@ -55,20 +58,20 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-3xl font-serif text-gray-900 flex items-center gap-3">
-                        <span className="text-2xl">{workspaceConfig?.icon}</span>
-                        {workspaceConfig?.label} Inventory
+                        {!isSuperAdmin && workspaceConfig && <span className="text-2xl">{workspaceConfig.icon}</span>}
+                        {isSuperAdmin ? 'Global' : workspaceConfig?.label} Inventory
                     </h1>
-                    <p className="text-gray-500">Manage your {workspaceConfig?.label?.toLowerCase()} collection.</p>
+                    <p className="text-gray-500">Manage {isSuperAdmin ? 'all your collections' : `your ${workspaceConfig?.label?.toLowerCase()} collection`}.</p>
                 </div>
 
                 <Link
                     href="/akshath/add"
                     className={cn(
                         "flex items-center gap-2 px-5 py-3 rounded-xl text-white text-xs font-bold uppercase tracking-wider shadow-lg transition-all hover:opacity-90 active:scale-95",
-                        `bg-gradient-to-r ${workspaceConfig?.bgGradient}`
+                        isSuperAdmin ? "bg-gray-900 hover:bg-gray-800" : `bg-gradient-to-r ${workspaceConfig?.bgGradient}`
                     )}
                 >
-                    <Plus size={16} /> Add {workspaceConfig?.label}
+                    <Plus size={16} /> Add {isSuperAdmin ? 'Item' : workspaceConfig?.label}
                 </Link>
             </div>
 

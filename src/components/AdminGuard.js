@@ -13,6 +13,8 @@ export default function AdminGuard({ children }) {
     const { activeWorkspace, workspaceConfig, switchWorkspace, loading: wsLoading } = useWorkspace();
     const router = useRouter();
 
+    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+
     useEffect(() => {
         if (!loading && !user) {
             router.push('/akshath/login');
@@ -21,14 +23,14 @@ export default function AdminGuard({ children }) {
 
     // Redirect to workspace selector if no workspace is active
     useEffect(() => {
-        if (!loading && !wsLoading && user && !activeWorkspace) {
+        if (!loading && !wsLoading && user && !isSuperAdmin && !activeWorkspace) {
             router.push('/akshath');
         }
-    }, [user, loading, wsLoading, activeWorkspace, router]);
+    }, [user, loading, wsLoading, activeWorkspace, isSuperAdmin, router]);
 
     if (loading || wsLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
     if (!user) return null;
-    if (!activeWorkspace) return null;
+    if (!isSuperAdmin && !activeWorkspace) return null;
 
     return (
         <div className="flex min-h-screen">
@@ -38,15 +40,17 @@ export default function AdminGuard({ children }) {
                     <p className="text-xs text-gray-400 mt-1">Akshath's Panel</p>
 
                     {/* Active Workspace Badge */}
-                    <div className={cn(
-                        "mt-4 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2",
-                        activeWorkspace === 'art'
-                            ? "bg-violet-50 text-violet-600 border border-violet-100"
-                            : "bg-amber-50 text-amber-600 border border-amber-100"
-                    )}>
-                        <span className="text-lg">{workspaceConfig?.icon}</span>
-                        {workspaceConfig?.label} Workspace
-                    </div>
+                    {!isSuperAdmin && activeWorkspace && (
+                        <div className={cn(
+                            "mt-4 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2",
+                            activeWorkspace === 'art'
+                                ? "bg-violet-50 text-violet-600 border border-violet-100"
+                                : "bg-amber-50 text-amber-600 border border-amber-100"
+                        )}>
+                            <span className="text-lg">{workspaceConfig?.icon}</span>
+                            {workspaceConfig?.label} Workspace
+                        </div>
+                    )}
                 </div>
 
                 <nav className="px-4 space-y-2 flex-1">
@@ -85,12 +89,14 @@ export default function AdminGuard({ children }) {
 
                 {/* Bottom Actions */}
                 <div className="px-4 pb-6 space-y-2 border-t border-gray-100 pt-4">
-                    <button
-                        onClick={switchWorkspace}
-                        className="flex items-center gap-3 p-3 text-gray-500 hover:bg-gray-50 rounded-lg w-full text-left transition-colors text-sm"
-                    >
-                        <ArrowLeftRight size={18} /> Switch Workspace
-                    </button>
+                    {!isSuperAdmin && (
+                        <button
+                            onClick={switchWorkspace}
+                            className="flex items-center gap-3 p-3 text-gray-500 hover:bg-gray-50 rounded-lg w-full text-left transition-colors text-sm"
+                        >
+                            <ArrowLeftRight size={18} /> Switch Workspace
+                        </button>
+                    )}
                     <button onClick={logout} className="flex items-center gap-3 p-3 text-red-500 hover:bg-red-50 rounded-lg w-full text-left transition-colors">
                         <LogOut size={20} /> Logout
                     </button>

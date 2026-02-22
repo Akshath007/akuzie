@@ -18,16 +18,18 @@ export default function AddPaintingPage() {
     const [imageInputs, setImageInputs] = useState(['']); // Array of URL strings
     const [previews, setPreviews] = useState([]);
 
-    // Auto-set category based on active workspace
-    const wsCategory = workspaceConfig?.category || 'painting';
-    const defaultMedium = wsCategory === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas';
-    const defaultFinish = wsCategory === 'crochet' ? 'Soft' : 'Varnished';
+    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+
+    // Auto-set category based on active workspace (unless super admin)
+    const initialCategory = isSuperAdmin ? 'painting' : (workspaceConfig?.category || 'painting');
+    const defaultMedium = initialCategory === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas';
+    const defaultFinish = initialCategory === 'crochet' ? 'Soft' : 'Varnished';
 
     const [formData, setFormData] = useState({
         title: '',
         price: '',
         size: '',
-        category: wsCategory,
+        category: initialCategory,
         medium: defaultMedium,
         finish: defaultFinish,
         description: '',
@@ -82,8 +84,8 @@ export default function AddPaintingPage() {
         try {
             await addPainting({
                 ...formData,
-                category: wsCategory,
-                workspace: activeWorkspace, // Tag with workspace for filtering
+                category: isSuperAdmin ? formData.category : (workspaceConfig?.category || 'painting'),
+                workspace: isSuperAdmin ? (formData.category === 'painting' ? 'art' : 'crochet') : activeWorkspace,
                 price: Number(formData.price),
                 images: validImages,
             }, user);
@@ -122,7 +124,8 @@ export default function AddPaintingPage() {
                             <div>
                                 <label className="block text-xs uppercase tracking-widest text-gray-500 font-medium ml-1 mb-2">Category</label>
                                 <select
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all duration-200"
+                                    disabled={!isSuperAdmin}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                                     value={formData.category}
                                     onChange={e => {
                                         const cat = e.target.value;
@@ -137,6 +140,7 @@ export default function AddPaintingPage() {
                                     <option value="painting">Painting</option>
                                     <option value="crochet">Crochet</option>
                                 </select>
+                                {!isSuperAdmin && <p className="text-[10px] text-violet-500 mt-2 ml-1">Category is locked to your current workspace.</p>}
                             </div>
 
                             <Input

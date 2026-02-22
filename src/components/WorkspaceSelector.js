@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { useWorkspace, WORKSPACES } from '@/context/WorkspaceContext';
 import { useRouter } from 'next/navigation';
 import { Lock, ArrowRight, Loader2, AlertCircle, ShieldAlert, Eye, EyeOff } from 'lucide-react';
@@ -152,17 +153,20 @@ function PinEntry({ workspace, onBack }) {
 // Workspace Selector (Main Page)
 export default function WorkspaceSelector() {
     const { activeWorkspace, loading: wsLoading } = useWorkspace();
+    const { user } = useAuth();
     const [selectedWorkspace, setSelectedWorkspace] = useState(null);
     const router = useRouter();
 
-    // If already authenticated, redirect to dashboard
+    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+
+    // If already authenticated or super admin, redirect to dashboard
     useEffect(() => {
-        if (activeWorkspace && !wsLoading) {
+        if (!wsLoading && (activeWorkspace || isSuperAdmin)) {
             router.push('/akshath/dashboard');
         }
-    }, [activeWorkspace, wsLoading, router]);
+    }, [activeWorkspace, isSuperAdmin, wsLoading, router]);
 
-    if (wsLoading) {
+    if (wsLoading || isSuperAdmin) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Loader2 className="animate-spin text-gray-400" size={32} />
