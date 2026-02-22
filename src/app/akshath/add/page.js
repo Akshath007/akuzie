@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addPainting } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
+import { useWorkspace } from '@/context/WorkspaceContext';
 import { Loader2, ArrowLeft, Plus, X, Image as ImageIcon } from 'lucide-react';
 import Input from '@/components/Input';
 import Link from 'next/link';
@@ -11,18 +12,24 @@ import { cn } from '@/lib/utils';
 
 export default function AddPaintingPage() {
     const { user } = useAuth();
+    const { activeWorkspace, workspaceConfig } = useWorkspace();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [imageInputs, setImageInputs] = useState(['']); // Array of URL strings
     const [previews, setPreviews] = useState([]);
 
+    // Auto-set category based on active workspace
+    const wsCategory = workspaceConfig?.category || 'painting';
+    const defaultMedium = wsCategory === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas';
+    const defaultFinish = wsCategory === 'crochet' ? 'Soft' : 'Varnished';
+
     const [formData, setFormData] = useState({
         title: '',
         price: '',
         size: '',
-        category: 'painting', // Default
-        medium: 'Acrylic on Canvas',
-        finish: 'Varnished',
+        category: wsCategory,
+        medium: defaultMedium,
+        finish: defaultFinish,
         description: '',
     });
 
@@ -75,8 +82,10 @@ export default function AddPaintingPage() {
         try {
             await addPainting({
                 ...formData,
+                category: wsCategory,
+                workspace: activeWorkspace, // Tag with workspace for filtering
                 price: Number(formData.price),
-                images: validImages, // Send array of images
+                images: validImages,
             }, user);
             router.push('/akshath/dashboard');
         } catch (error) {

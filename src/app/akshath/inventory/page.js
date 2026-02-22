@@ -3,26 +3,29 @@
 import { useEffect, useState } from 'react';
 import { getPaintings, deletePainting, updatePainting } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
+import { useWorkspace } from '@/context/WorkspaceContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { Trash2, Edit, ImageIcon, Package } from 'lucide-react';
+import { Trash2, Edit, ImageIcon, Package, Plus } from 'lucide-react';
 
 export default function InventoryPage() {
     const { user } = useAuth();
+    const { activeWorkspace, workspaceConfig } = useWorkspace();
     const [paintings, setPaintings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, painting, crochet
 
     const fetchPaintings = async () => {
-        const data = await getPaintings();
+        if (!workspaceConfig) return;
+        // Fetch only items matching this workspace's category
+        const data = await getPaintings(workspaceConfig.category);
         setPaintings(data);
         setLoading(false);
     };
 
     useEffect(() => {
         fetchPaintings();
-    }, []);
+    }, [activeWorkspace, workspaceConfig]);
 
     const handleDelete = async (id) => {
         if (confirm("Delete this masterpiece?")) {
@@ -39,14 +42,6 @@ export default function InventoryPage() {
         fetchPaintings();
     };
 
-    // Filter logic
-    const filteredItems = paintings.filter(p => {
-        if (filter === 'all') return true;
-        // Handle legacy items without category as 'painting'
-        const cat = p.category || 'painting';
-        return cat === filter;
-    });
-
     if (loading) return (
         <div className="flex h-screen items-center justify-center bg-gray-50/50">
             <div className="flex flex-col items-center gap-4">
@@ -59,24 +54,22 @@ export default function InventoryPage() {
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-3xl font-serif text-gray-900">Inventory</h1>
-                    <p className="text-gray-500">Manage your collection.</p>
+                    <h1 className="text-3xl font-serif text-gray-900 flex items-center gap-3">
+                        <span className="text-2xl">{workspaceConfig?.icon}</span>
+                        {workspaceConfig?.label} Inventory
+                    </h1>
+                    <p className="text-gray-500">Manage your {workspaceConfig?.label?.toLowerCase()} collection.</p>
                 </div>
 
-                <div className="flex bg-white rounded-lg p-1 border border-gray-100 shadow-sm">
-                    {['all', 'painting', 'crochet'].map((f) => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={cn(
-                                "px-4 py-1.5 rounded-md text-xs font-medium uppercase tracking-wider transition-all",
-                                filter === f ? "bg-gray-100 text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                            )}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                </div>
+                <Link
+                    href="/akshath/add"
+                    className={cn(
+                        "flex items-center gap-2 px-5 py-3 rounded-xl text-white text-xs font-bold uppercase tracking-wider shadow-lg transition-all hover:opacity-90 active:scale-95",
+                        `bg-gradient-to-r ${workspaceConfig?.bgGradient}`
+                    )}
+                >
+                    <Plus size={16} /> Add {workspaceConfig?.label}
+                </Link>
             </div>
 
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6">
@@ -91,7 +84,7 @@ export default function InventoryPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm">
-                            {filteredItems.map((painting) => (
+                            {paintings.map((painting) => (
                                 <tr key={painting.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0 white-space-nowrap">
                                     <td className="py-4 pl-4 min-w-[200px]">
                                         <div className="flex items-center gap-4">
@@ -134,6 +127,13 @@ export default function InventoryPage() {
                                     </td>
                                 </tr>
                             ))}
+                            {paintings.length === 0 && (
+                                <tr>
+                                    <td colSpan="4" className="py-16 text-center text-gray-400 italic">
+                                        No {workspaceConfig?.label?.toLowerCase()} items yet. Add your first one!
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

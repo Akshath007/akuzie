@@ -1,5 +1,7 @@
-import { redirect } from 'next/navigation';
+'use client';
+
+import WorkspaceSelector from '@/components/WorkspaceSelector';
 
 export default function AdminIndex() {
-    redirect('/akshath/dashboard');
+    return <WorkspaceSelector />;
 }

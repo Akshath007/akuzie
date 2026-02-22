@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getOrders, updateOrderStatus, deleteOrder, safeToMillis } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
+import { useWorkspace } from '@/context/WorkspaceContext';
 import { formatPrice, ORDER_STATUS, cn } from '@/lib/utils';
 import { ExternalLink, Calendar, User, Package, CreditCard, Trash2, X, MapPin, CheckCircle } from 'lucide-react';
 
@@ -11,10 +12,8 @@ function formatDate(dateValue, options = {}) {
     if (!dateValue) return 'N/A';
     let date;
     if (dateValue?.seconds) {
-        // Firestore Timestamp
         date = new Date(dateValue.seconds * 1000);
     } else if (dateValue?.toDate) {
-        // Firestore Timestamp object with toDate method
         date = dateValue.toDate();
     } else if (typeof dateValue === 'string' || typeof dateValue === 'number') {
         date = new Date(dateValue);
@@ -29,21 +28,35 @@ function formatDate(dateValue, options = {}) {
 
 export default function OrdersPage() {
     const { user } = useAuth();
+    const { activeWorkspace, workspaceConfig } = useWorkspace();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
     const fetchOrders = async () => {
         const data = await getOrders();
+
+        // Filter orders by workspace
+        const filtered = data.filter(order => {
+            if (order.workspace) return order.workspace === activeWorkspace;
+            // Legacy: check item categories
+            if (order.items?.length > 0) {
+                return order.items.some(item =>
+                    (item.category || 'painting') === workspaceConfig?.category
+                );
+            }
+            return false;
+        });
+
         // sort by date desc
-        data.sort((a, b) => safeToMillis(b.createdAt) - safeToMillis(a.createdAt));
-        setOrders(data);
+        filtered.sort((a, b) => safeToMillis(b.createdAt) - safeToMillis(a.createdAt));
+        setOrders(filtered);
         setLoading(false);
     };
 
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        if (activeWorkspace) fetchOrders();
+    }, [activeWorkspace]);
 
     const handleStatusChange = async (id, status) => {
         // Optimistic update
