@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { adminAuth } from '@/lib/firebase-admin';
 import { LRUCache } from 'lru-cache';
 import crypto from 'crypto';
 
@@ -154,5 +155,78 @@ export async function GET(request) {
     } catch (error) {
         console.error('Session verify error:', error);
         return NextResponse.json({ valid: false }, { status: 500 });
+    }
+}
+
+/**
+ * PUT /api/workspace/verify
+ * Body: { workspace: "art" | "crochet", newPin: "newpin123" }
+ * Header: Authorization: Bearer <firebase-id-token>
+ * 
+ * Allows super admin to change workspace PINs.
+ */
+export async function PUT(request) {
+    try {
+        // Verify Firebase auth token
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const idToken = authHeader.split('Bearer ')[1];
+        const decoded = await adminAuth.verifyIdToken(idToken);
+
+        // Only super admin can change PINs
+        if (decoded.email !== 'akshathhp123@gmail.com') {
+            return NextResponse.json({ error: 'Forbidden. Only super admin can change PINs.' }, { status: 403 });
+        }
+
+        const { workspace, newPin } = await request.json();
+
+        // Validate
+        if (!workspace || !newPin) {
+            return NextResponse.json({ error: 'Workspace and new PIN are required.' }, { status: 400 });
+        }
+
+        if (!['art', 'crochet'].includes(workspace)) {
+            return NextResponse.json({ error: 'Invalid workspace.' }, { status: 400 });
+        }
+
+        if (newPin.length < 4) {
+            return NextResponse.json({ error: 'PIN must be at least 4 characters.' }, { status: 400 });
+        }
+
+        // Update PIN hash in Firestore
+        const configRef = adminDb.collection('workspace_config').doc(workspace);
+        await configRef.set({
+            pinHash: hashPin(newPin),
+            workspace,
+            updatedAt: new Date(),
+            updatedBy: decoded.email,
+        }, { merge: true });
+
+        // Invalidate all active sessions for this workspace
+        const sessionsRef = adminDb.collection('workspace_sessions');
+        const sessionsSnap = await sessionsRef.where('workspace', '==', workspace).get();
+        const batch = adminDb.batch();
+        sessionsSnap.docs.forEach(doc => batch.delete(doc.ref));
+        if (sessionsSnap.docs.length > 0) await batch.commit();
+
+        // Log the action
+        await adminDb.collection('admin_logs').add({
+            adminEmail: decoded.email,
+            action: 'CHANGE_WORKSPACE_PIN',
+            targetId: workspace,
+            timestamp: new Date(),
+            details: { workspace, sessionsInvalidated: sessionsSnap.docs.length },
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: `PIN for ${workspace} workspace updated successfully. ${sessionsSnap.docs.length} active sessions revoked.`,
+        });
+    } catch (error) {
+        console.error('Change PIN error:', error);
+        return NextResponse.json({ error: 'Failed to update PIN.' }, { status: 500 });
     }
 }

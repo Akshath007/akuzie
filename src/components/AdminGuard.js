@@ -74,6 +74,9 @@ export default function AdminGuard({ children }) {
                             <Link href="/akshath/users" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                                 <Users size={20} /> User Management
                             </Link>
+                            <Link href="/akshath/workspaces" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                <Lock size={20} /> Workspace Settings
+                            </Link>
                         </>
                     )}
                     <Link href="/akshath/auctions" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
