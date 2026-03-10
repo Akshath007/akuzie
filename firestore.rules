@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Check if the current user is the admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'akshathhp123@gmail.com' ||
+        request.auth.token.email == 'akuzie27@gmail.com'
+      );
+    }
+
+    // Helper: Check if user is logged in
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // ============================================
+    // PAINTINGS (Public read, Admin write)
+    // ============================================
+    match /paintings/{paintingId} {
+      allow read: if true;                    // Anyone can browse the gallery
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ============================================
+    // ORDERS (Owner read, Admin full access)
+    // ============================================
+    match /orders/{orderId} {
+      allow read: if isAdmin() 
+                  || (isLoggedIn() && resource.data.customerEmail == request.auth.token.email)
+                  || (isLoggedIn() && resource.data.userEmail == request.auth.token.email)
+                  || (isLoggedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isLoggedIn();          // Any logged-in user can place an order
+      allow update, delete: if isAdmin();     // Only admin can modify/delete orders
+    }
+
+    // ============================================
+    // DELETED ORDERS (Admin only)
+    // ============================================
+    match /deleted_orders/{orderId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================
+    // USERS (Own profile read/write, Admin full access)
+    // ============================================
+    match /users/{userId} {
+      allow read: if isAdmin() || (isLoggedIn() && request.auth.uid == userId);
+      allow create: if isLoggedIn() && request.auth.uid == userId;
+      allow update: if isAdmin() || (isLoggedIn() && request.auth.uid == userId);
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // ADMIN LOGS (Admin only)
+    // ============================================
+    match /admin_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();             // Only admin actions create logs
+      allow update, delete: if false;         // Logs are immutable
+    }
+
+    // ============================================
+    // AUCTIONS (Public read, Admin write)
+    // ============================================
+    match /auctions/{auctionId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ============================================
+    // BIDS (Logged in users can bid, Admin can read all)
+    // ============================================
+    match /bids/{bidId} {
+      allow read: if isAdmin() || (isLoggedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isLoggedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // ============================================
+    // NOTIFY REQUESTS (Anyone can create, Admin reads)
+    // ============================================
+    match /notify_requests/{requestId} {
+      allow create: if true;                  // Anyone can request notifications
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // ============================================
+    // CONTACT MESSAGES (Anyone can create, Admin reads)
+    // ============================================
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+  }
+}
