@@ -4,26 +4,26 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 
 const WorkspaceContext = createContext();
 
-// Workspace definitions — scalable for future additions
 const SESSION_KEY = 'akuzie_workspace_session';
 
 export function WorkspaceProvider({ children }) {
     const [activeWorkspace, setActiveWorkspace] = useState(null);
     const [sessionToken, setSessionToken] = useState(null);
-    const [workspaces, setWorkspaces] = useState([]); // Dynamic workspaces
+    const [workspaces, setWorkspaces] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch authorized workspaces and restore session
     useEffect(() => {
         let mounted = true;
+        let unsubscribe = null;
 
         const initialize = async () => {
             try {
-                // 1. Fetch authorized workspaces
-                // We need the Firebase ID token for this
-                import('@/lib/firebase').then(async ({ auth }) => {
-                    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+                const { auth } = await import('@/lib/firebase');
+
+                // Wait for the first auth state to settle, THEN fetch everything
+                await new Promise((resolve) => {
+                    unsubscribe = auth.onAuthStateChanged(async (user) => {
                         if (user) {
                             try {
                                 const idToken = await user.getIdToken();
@@ -40,30 +40,21 @@ export function WorkspaceProvider({ children }) {
                         } else {
                             if (mounted) setWorkspaces([]);
                         }
+                        resolve(); // Unblock — auth state is now known
                     });
-
-                    // Cleanup auth listener when unmounting (handled outside this scope usually, but good practice)
-                    // We don't return unsubscribe here since this is inside a nested promise, 
-                    // but onAuthStateChanged will just run once per user shift.
                 });
 
-                // 2. Restore Session
+                // Restore Session after we know the auth state
                 const stored = localStorage.getItem(SESSION_KEY);
-                if (!stored) {
-                    if (mounted) setLoading(false);
-                    return;
-                }
+                if (!stored) return;
 
-                const { token, workspace, expiresAt } = JSON.parse(stored);
+                const { token, expiresAt } = JSON.parse(stored);
 
-                // Check if session is expired client-side first
                 if (Date.now() > expiresAt) {
                     localStorage.removeItem(SESSION_KEY);
-                    if (mounted) setLoading(false);
                     return;
                 }
 
-                // Validate with server
                 const res = await fetch(`/api/workspaces/verify?token=${token}`);
                 const data = await res.json();
 
@@ -83,7 +74,10 @@ export function WorkspaceProvider({ children }) {
 
         initialize();
 
-        return () => { mounted = false; };
+        return () => {
+            mounted = false;
+            if (unsubscribe) unsubscribe();
+        };
     }, []);
 
     // Verify PIN and enter workspace

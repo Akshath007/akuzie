@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
     const { user, isSuperAdmin } = useAuth();
-    const { activeWorkspace, workspaceConfig, workspaces } = useWorkspace();
+    const { activeWorkspace, workspaceConfig, workspaces, loading: wsLoading } = useWorkspace();
 
     // For super admin: which workspace tab is selected. null = "All"
     const [selectedTab, setSelectedTab] = useState(null);
@@ -24,6 +24,9 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             if (!isSuperAdmin && !workspaceConfig) return;
+            // Wait for workspaces to be fetched before rendering anything
+            if (isSuperAdmin && wsLoading) return;
+
 
             setLoading(true);
             setError(null);
@@ -76,7 +79,8 @@ export default function DashboardPage() {
         };
 
         fetchData();
-    }, [activeWorkspace, workspaceConfig, user, isSuperAdmin, selectedTab, workspaces]);
+    }, [activeWorkspace, workspaceConfig, user, isSuperAdmin, selectedTab, workspaces, wsLoading]);
+
 
     const totalValue = paintings
         .filter(p => p.status === PAINTING_STATUS.SOLD)
