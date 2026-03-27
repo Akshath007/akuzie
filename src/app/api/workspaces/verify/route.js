@@ -1,34 +1,64 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
-import { adminAuth } from '@/lib/firebase-admin';
-import { LRUCache } from 'lru-cache';
+import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import crypto from 'crypto';
 
-// Rate limiter: max 5 attempts per IP per 15 minutes
-const rateLimiter = new LRUCache({
-    max: 500,
-    ttl: 15 * 60 * 1000, // 15 minutes
-});
+// ─── Firestore-backed Rate Limiter ───────────────────────────────────────────
+// Unlike in-memory LRUCache, this survives serverless cold starts.
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+async function checkAndIncrementRateLimit(ip) {
+    const key = `pin_rl_${ip}`;
+    const docRef = adminDb.collection('rate_limits').doc(key);
+
+    const result = await adminDb.runTransaction(async (tx) => {
+        const doc = await tx.get(docRef);
+        const now = Date.now();
+
+        if (!doc.exists || doc.data().windowStart + RATE_LIMIT_WINDOW_MS < now) {
+            // New window
+            tx.set(docRef, { attempts: 1, windowStart: now });
+            return { attempts: 1, blocked: false };
+        }
+
+        const data = doc.data();
+        const newAttempts = data.attempts + 1;
+
+        if (newAttempts > RATE_LIMIT_MAX_ATTEMPTS) {
+            return { attempts: newAttempts, blocked: true };
+        }
+
+        tx.update(docRef, { attempts: newAttempts });
+        return { attempts: newAttempts, blocked: false };
+    });
+
+    return result;
+}
+
+async function resetRateLimit(ip) {
+    const key = `pin_rl_${ip}`;
+    await adminDb.collection('rate_limits').doc(key).delete();
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function hashPin(pin) {
     return crypto.createHash('sha256').update(pin).digest('hex');
 }
 
 /**
- * POST /api/workspace/verify
+ * POST /api/workspaces/verify
  * Body: { workspace: "art" | "crochet", pin: "1234" }
- * 
+ *
  * Verifies workspace PIN and returns a session token.
- * Rate limited to 5 attempts per IP per 15 minutes.
+ * Rate limited to 5 attempts per IP per 15 minutes — persisted in Firestore.
  */
 export async function POST(request) {
     try {
-        // Rate limiting
         const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
-        const rateLimitKey = `workspace_pin_${ip}`;
-        const attempts = rateLimiter.get(rateLimitKey) || 0;
 
-        if (attempts >= 5) {
+        // Check rate limit BEFORE processing the PIN
+        const rateCheck = await checkAndIncrementRateLimit(ip);
+        if (rateCheck.blocked) {
             return NextResponse.json(
                 { error: 'Too many attempts. Please try again in 15 minutes.', locked: true },
                 { status: 429 }
@@ -37,23 +67,18 @@ export async function POST(request) {
 
         const { workspace, pin } = await request.json();
 
-        // Validate input
         if (!workspace || !pin) {
             return NextResponse.json({ error: 'Workspace and PIN are required.' }, { status: 400 });
         }
 
-        // Find the dynamic workspace
-        const workspacesRef = adminDb.collection('workspaces');
-        const workspaceSnap = await workspacesRef.where('id', '==', workspace).limit(1).get();
-
+        // Find the workspace
+        const workspaceSnap = await adminDb.collection('workspaces').where('id', '==', workspace).limit(1).get();
         if (workspaceSnap.empty) {
             return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
         }
 
         const config = workspaceSnap.docs[0].data();
 
-        // Check if a PIN is set for this workspace. Some new ones might lack it during creation briefly, 
-        // though the UI should enforce it.
         if (!config.pinHash) {
             return NextResponse.json({ error: 'Workspace is not fully configured yet.' }, { status: 400 });
         }
@@ -61,10 +86,9 @@ export async function POST(request) {
         const pinHash = hashPin(pin);
 
         if (pinHash !== config.pinHash) {
-            rateLimiter.set(rateLimitKey, attempts + 1);
-            const remaining = 4 - attempts;
+            const remaining = Math.max(0, RATE_LIMIT_MAX_ATTEMPTS - rateCheck.attempts);
             return NextResponse.json(
-                { error: `Incorrect PIN. ${remaining > 0 ? remaining + ' attempts remaining.' : 'Account locked.'}`, remainingAttempts: remaining },
+                { error: `Incorrect PIN. ${remaining > 0 ? `${remaining} attempts remaining.` : 'Account locked.'}`, remainingAttempts: remaining },
                 { status: 401 }
             );
         }
@@ -73,7 +97,7 @@ export async function POST(request) {
         const sessionToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = Date.now() + 30 * 60 * 1000; // 30 minutes
 
-        // Store session in Firestore
+        // Store session in Firestore (already persistent — no change needed here)
         await adminDb.collection('workspace_sessions').doc(sessionToken).set({
             workspace,
             expiresAt,
@@ -81,7 +105,6 @@ export async function POST(request) {
             ip,
         });
 
-        // Log workspace access
         await adminDb.collection('admin_logs').add({
             action: 'WORKSPACE_ACCESS',
             workspace,
@@ -90,15 +113,10 @@ export async function POST(request) {
             details: { method: 'pin_verification' },
         });
 
-        // Reset rate limiter on success
-        rateLimiter.delete(rateLimitKey);
+        // Reset rate limit counter on success
+        await resetRateLimit(ip);
 
-        return NextResponse.json({
-            success: true,
-            token: sessionToken,
-            workspace,
-            expiresAt,
-        });
+        return NextResponse.json({ success: true, token: sessionToken, workspace, expiresAt });
     } catch (error) {
         console.error('Workspace verify error:', error);
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
@@ -106,8 +124,8 @@ export async function POST(request) {
 }
 
 /**
- * GET /api/workspace/verify?token=xxx
- * 
+ * GET /api/workspaces/verify?token=xxx
+ *
  * Validates an existing session token.
  */
 export async function GET(request) {
@@ -146,15 +164,14 @@ export async function GET(request) {
 }
 
 /**
- * PUT /api/workspace/verify
- * Body: { workspace: "art" | "crochet", newPin: "newpin123" }
+ * PUT /api/workspaces/verify
+ * Body: { workspace: "art", newPin: "newpin123" }
  * Header: Authorization: Bearer <firebase-id-token>
- * 
- * Allows super admin to change workspace PINs.
+ *
+ * Allows super admin (by Firestore role) to change workspace PINs.
  */
 export async function PUT(request) {
     try {
-        // Verify Firebase auth token
         const authHeader = request.headers.get('authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -163,45 +180,39 @@ export async function PUT(request) {
         const idToken = authHeader.split('Bearer ')[1];
         const decoded = await adminAuth.verifyIdToken(idToken);
 
-        // Only super admin can change PINs
-        if (decoded.email !== 'akshathhp123@gmail.com') {
+        // Check role via Firestore (or fallback to hardcoded super admin email)
+        const userSnap = await adminDb.collection('users').where('email', '==', decoded.email).limit(1).get();
+        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com' ||
+            (!userSnap.empty && userSnap.docs[0].data().role === 'admin');
+
+        if (!isSuperAdmin) {
             return NextResponse.json({ error: 'Forbidden. Only super admin can change PINs.' }, { status: 403 });
         }
 
         const { workspace, newPin } = await request.json();
 
-        // Validate
         if (!workspace || !newPin) {
             return NextResponse.json({ error: 'Workspace and new PIN are required.' }, { status: 400 });
-        }
-
-        const workspacesRef = adminDb.collection('workspaces');
-        const workspaceSnap = await workspacesRef.where('id', '==', workspace).limit(1).get();
-
-        if (workspaceSnap.empty) {
-            return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
         }
 
         if (newPin.length < 4) {
             return NextResponse.json({ error: 'PIN must be at least 4 characters.' }, { status: 400 });
         }
 
-        // Update PIN hash in Firestore
+        const workspaceSnap = await adminDb.collection('workspaces').where('id', '==', workspace).limit(1).get();
+        if (workspaceSnap.empty) {
+            return NextResponse.json({ error: 'Workspace not found.' }, { status: 404 });
+        }
+
         const docRef = workspaceSnap.docs[0].ref;
-        await docRef.set({
-            pinHash: hashPin(newPin),
-            updatedAt: new Date(),
-            updatedBy: decoded.email,
-        }, { merge: true });
+        await docRef.set({ pinHash: hashPin(newPin), updatedAt: new Date(), updatedBy: decoded.email }, { merge: true });
 
         // Invalidate all active sessions for this workspace
-        const sessionsRef = adminDb.collection('workspace_sessions');
-        const sessionsSnap = await sessionsRef.where('workspace', '==', workspace).get();
+        const sessionsSnap = await adminDb.collection('workspace_sessions').where('workspace', '==', workspace).get();
         const batch = adminDb.batch();
         sessionsSnap.docs.forEach(doc => batch.delete(doc.ref));
         if (sessionsSnap.docs.length > 0) await batch.commit();
 
-        // Log the action
         await adminDb.collection('admin_logs').add({
             adminEmail: decoded.email,
             action: 'CHANGE_WORKSPACE_PIN',
@@ -212,7 +223,7 @@ export async function PUT(request) {
 
         return NextResponse.json({
             success: true,
-            message: `PIN for ${workspace} workspace updated successfully. ${sessionsSnap.docs.length} active sessions revoked.`,
+            message: `PIN for ${workspace} updated. ${sessionsSnap.docs.length} active sessions revoked.`,
         });
     } catch (error) {
         console.error('Change PIN error:', error);

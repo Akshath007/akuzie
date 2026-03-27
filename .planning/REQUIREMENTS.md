@@ -28,7 +28,7 @@ Requirements for the immediate stability patch milestone.
 
 ### Rate Limiting
 
-- [ ] **RAT-01**: Replace in-memory `LRUCache` in `/api/workspace/verify/route.js` with a database-backed rate limiter (e.g., Upstash Redis) or a Firestore-based fallback to survive serverless cold starts.
+- [x] **RAT-01**: Replace in-memory `LRUCache` in `/api/workspace/verify/route.js` with a database-backed rate limiter (e.g., Upstash Redis) or a Firestore-based fallback to survive serverless cold starts.
 
 ## v2 Requirements
 
@@ -60,7 +60,7 @@ Deferred to future releases.
 | SEC-01 | Phase 3 | Complete |
 | SEC-02 | Phase 3 | Complete |
 | SEC-03 | Phase 3 | Complete |
-| RAT-01 | Phase 4 | Pending |
+| RAT-01 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 11 total
