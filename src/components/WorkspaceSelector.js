@@ -151,13 +151,11 @@ function PinEntry({ workspaceId, config, onBack }) {
 // Workspace Selector (Main Page)
 export default function WorkspaceSelector() {
     const { activeWorkspace, workspaces, loading: wsLoading } = useWorkspace();
-    const { user, loading: authLoading } = useAuth();
+    const { user, isSuperAdmin, loading: authLoading } = useAuth();
     const [selectedWorkspace, setSelectedWorkspace] = useState(null);
     const router = useRouter();
 
-    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-    // If already authenticated or super admin, redirect to dashboard
+        // If already authenticated or super admin, redirect to dashboard
     useEffect(() => {
         if (!wsLoading && !authLoading && (activeWorkspace || isSuperAdmin)) {
             router.push('/akshath/dashboard');

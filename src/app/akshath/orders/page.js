@@ -27,7 +27,7 @@ function formatDate(dateValue, options = {}) {
 }
 
 export default function OrdersPage() {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
     const { activeWorkspace, workspaceConfig } = useWorkspace();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -36,9 +36,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         const data = await getOrders();
         let filtered = data;
-        const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-        // Filter orders by workspace (unless super admin)
+                // Filter orders by workspace (unless super admin)
         if (!isSuperAdmin) {
             filtered = data.filter(order => {
                 const configCategory = workspaceConfig?.category || (activeWorkspace === 'art' ? 'painting' : 'crochet');
@@ -60,8 +58,7 @@ export default function OrdersPage() {
     };
 
     useEffect(() => {
-        const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-        if (isSuperAdmin || activeWorkspace) fetchOrders();
+                if (isSuperAdmin || activeWorkspace) fetchOrders();
     }, [activeWorkspace, workspaceConfig, user]);
 
     const handleStatusChange = async (id, status) => {
@@ -320,7 +317,7 @@ export default function OrdersPage() {
                         </div>
 
                         <div className="mt-8 flex justify-end gap-3">
-                            {user?.email === 'akshathhp123@gmail.com' && (
+                            {isSuperAdmin && (
                                 <button
                                     onClick={() => handleDelete(selectedOrder.id)}
                                     className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"

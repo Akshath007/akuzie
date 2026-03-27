@@ -69,10 +69,15 @@ export default function AuctionCheckoutPage() {
     const handlePayment = async () => {
         setProcessing(true);
         try {
+            const idToken = await user.getIdToken();
+
             // 1. Call auction checkout API to get PayU form params
             const response = await fetch('/api/checkout/auction', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
                 body: JSON.stringify({
                     auctionId: auction.id,
                     userId: user.uid,

@@ -1,10 +1,23 @@
 import { NextResponse } from 'next/server';
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { getPayUConfig, generatePayUHash, generateTxnId } from '@/lib/payu';
 
 export async function POST(request) {
     try {
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized: Missing or invalid Authorization header' }, { status: 401 });
+        }
+
+        const idToken = authHeader.split('Bearer ')[1];
+        let decodedToken;
+        try {
+            decodedToken = await adminAuth.verifyIdToken(idToken);
+        } catch (error) {
+            console.error('Error verifying Firebase ID token:', error);
+            return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
+        }
+
         const body = await request.json();
         const { auctionId, userId, customerName, customerEmail, customerPhone, shippingAddress } = body;
 
@@ -12,11 +25,15 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Missing Required Fields' }, { status: 400 });
         }
 
-        // 1. Fetch Auction
-        const auctionRef = doc(db, 'auctions', auctionId);
-        const auctionSnap = await getDoc(auctionRef);
+        if (userId !== decodedToken.uid) {
+            return NextResponse.json({ error: 'Forbidden: User ID mismatch' }, { status: 403 });
+        }
 
-        if (!auctionSnap.exists()) {
+        // 1. Fetch Auction
+        const auctionRef = adminDb.collection('auctions').doc(auctionId);
+        const auctionSnap = await auctionRef.get();
+
+        if (!auctionSnap.exists) {
             return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
         }
 
@@ -35,7 +52,7 @@ export async function POST(request) {
         }
 
         // 3. Create Order Record in Firestore
-        const orderRef = await addDoc(collection(db, 'orders'), {
+        const orderRef = await adminDb.collection('orders').add({
             type: 'auction',
             auctionId: auctionId,
             customerName,
@@ -52,7 +69,7 @@ export async function POST(request) {
             paymentStatus: 'payment_pending',
             method: 'payu_online',
             userId: userId,
-            createdAt: serverTimestamp()
+            createdAt: new Date()
         });
 
         const orderId = orderRef.id;

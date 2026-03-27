@@ -9,16 +9,14 @@ import { TrendingUp, ImageIcon, Package, ShoppingBag, AlertCircle } from 'lucide
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
     const { activeWorkspace, workspaceConfig } = useWorkspace();
     const [paintings, setPaintings] = useState([]);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-    useEffect(() => {
+        useEffect(() => {
         const fetchData = async () => {
             // Non-super admins MUST have a workspaceConfig before fetching
             if (!isSuperAdmin && !workspaceConfig) return;

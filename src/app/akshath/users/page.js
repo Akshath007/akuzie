@@ -7,7 +7,7 @@ import { User, ShieldAlert, Trash2, Ban, CheckCircle, Search, Mail, Clock } from
 import { format } from 'date-fns';
 
 export default function UserManagementPage() {
-    const { user: adminUser } = useAuth();
+    const { user: adminUser, isSuperAdmin } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -20,7 +20,7 @@ export default function UserManagementPage() {
     };
 
     useEffect(() => {
-        if (adminUser?.email === 'akshathhp123@gmail.com') {
+        if (isSuperAdmin) {
             fetchUsers();
         }
     }, [adminUser]);

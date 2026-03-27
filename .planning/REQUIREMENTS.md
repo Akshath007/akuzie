@@ -22,9 +22,9 @@ Requirements for the immediate stability patch milestone.
 
 ### Security & Roles
 
-- [ ] **SEC-01**: Update `AuthContext.js` to check an `isAdmin` field in the user's Firestore document instead of hardcoded emails.
-- [ ] **SEC-02**: Create an initialization script/function to assign the first Super Admin role in Firestore.
-- [ ] **SEC-03**: Update `/api/checkout/auction/route.js` to verify the user's Firebase ID token via headers instead of trusting the body `userId`.
+- [x] **SEC-01**: Update `AuthContext.js` to check an `isAdmin` field in the user's Firestore document instead of hardcoded emails.
+- [x] **SEC-02**: Create an initialization script/function to assign the first Super Admin role in Firestore.
+- [x] **SEC-03**: Update `/api/checkout/auction/route.js` to verify the user's Firebase ID token via headers instead of trusting the body `userId`.
 
 ### Rate Limiting
 
@@ -57,9 +57,9 @@ Deferred to future releases.
 | ADM-01 | Phase 2 | Complete |
 | ADM-02 | Phase 2 | Complete |
 | ADM-03 | Phase 2 | Complete |
-| SEC-01 | Phase 3 | Pending |
-| SEC-02 | Phase 3 | Pending |
-| SEC-03 | Phase 3 | Pending |
+| SEC-01 | Phase 3 | Complete |
+| SEC-02 | Phase 3 | Complete |
+| SEC-03 | Phase 3 | Complete |
 | RAT-01 | Phase 4 | Pending |
 
 **Coverage:**

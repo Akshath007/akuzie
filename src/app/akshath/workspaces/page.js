@@ -10,15 +10,13 @@ import { cn } from '@/lib/utils';
 import WorkspaceFormModal from './WorkspaceFormModal';
 
 export default function WorkspaceSettingsPage() {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
     const router = useRouter();
     const { workspaces, refreshWorkspaces } = useWorkspace();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingWorkspace, setEditingWorkspace] = useState(null);
 
-    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-    // Redirect non-super admins
+        // Redirect non-super admins
     if (!isSuperAdmin) {
         router.push('/akshath/dashboard');
         return null;

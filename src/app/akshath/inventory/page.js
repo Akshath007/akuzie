@@ -10,15 +10,13 @@ import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
 import { Trash2, Edit, ImageIcon, Package, Plus, AlertCircle } from 'lucide-react';
 
 export default function InventoryPage() {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
     const { activeWorkspace, workspaceConfig } = useWorkspace();
     const [paintings, setPaintings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-    const fetchPaintings = async () => {
+        const fetchPaintings = async () => {
         if (!isSuperAdmin && !workspaceConfig) return;
 
         setLoading(true);

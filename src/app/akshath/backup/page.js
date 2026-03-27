@@ -24,7 +24,7 @@ function formatDate(dateValue, options = {}) {
 }
 
 export default function BackupPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, isSuperAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
     const [deletedOrders, setDeletedOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function BackupPage() {
         }
     };
 
-    if (authLoading || (loading && user?.email === 'akshathhp123@gmail.com')) return (
+    if (authLoading || (loading && isSuperAdmin)) return (
         <div className="flex h-screen items-center justify-center">
             <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
         </div>

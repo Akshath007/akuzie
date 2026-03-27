@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function AnalyticsPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, isSuperAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
     const [stats, setStats] = useState({
         totalUsers: 0,
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
         }).format(date);
     };
 
-    if (authLoading || (loading && user?.email === 'akshathhp123@gmail.com')) {
+    if (authLoading || (loading && isSuperAdmin)) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>

@@ -11,16 +11,14 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export default function AddPaintingPage() {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
     const { activeWorkspace, workspaceConfig } = useWorkspace();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [imageInputs, setImageInputs] = useState(['']); // Array of URL strings
     const [previews, setPreviews] = useState([]);
 
-    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-    // Auto-set category based on active workspace (unless super admin)
+        // Auto-set category based on active workspace (unless super admin)
     const initialCategory = isSuperAdmin ? 'painting' : (workspaceConfig?.category || 'painting');
     const defaultMedium = initialCategory === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas';
     const defaultFinish = initialCategory === 'crochet' ? 'Soft' : 'Varnished';

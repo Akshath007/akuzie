@@ -111,10 +111,11 @@ export function AuthProvider({ children }) {
         return signOut(auth);
     };
 
-    const isAdmin = user?.email === 'akshathhp123@gmail.com' || user?.email === 'akuzie27@gmail.com';
+    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
+    const isAdmin = isSuperAdmin || userData?.role === 'admin' || user?.email === 'akuzie27@gmail.com';
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout, isAdmin }}>
+        <AuthContext.Provider value={{ user, userData, loading, login, loginWithGoogle, logout, isAdmin, isSuperAdmin }}>
             {children}
         </AuthContext.Provider>
     );

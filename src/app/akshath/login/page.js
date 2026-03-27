@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
             const result = await loginWithGoogle();
             const userEmail = result.user?.email;
             // Check if the Google account is an admin
-            if (userEmail === 'akshathhp123@gmail.com' || userEmail === 'akuzie27@gmail.com') {
+            if (userEmail === 'akshathhp123@gmail.com') {
                 router.push('/akshath');
             } else {
                 setError('This Google account is not authorized for admin access.');

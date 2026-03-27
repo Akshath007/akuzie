@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogsPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, isSuperAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -44,12 +44,12 @@ export default function AdminLogsPage() {
             setLoading(false);
         }
 
-        if (!authLoading && user?.email === 'akshathhp123@gmail.com') {
+        if (!authLoading && isSuperAdmin) {
             fetchLogs();
         }
     }, [user, authLoading]);
 
-    if (authLoading || (loading && user?.email === 'akshathhp123@gmail.com')) return (
+    if (authLoading || (loading && isSuperAdmin)) return (
         <div className="flex h-[50vh] items-center justify-center">
             <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
         </div>

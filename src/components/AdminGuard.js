@@ -9,13 +9,11 @@ import { LayoutDashboard, PlusCircle, ShoppingBag, LogOut, TrendingUp, Clipboard
 import { cn } from '@/lib/utils';
 
 export default function AdminGuard({ children }) {
-    const { user, loading, logout } = useAuth();
+    const { user, isSuperAdmin, loading, logout } = useAuth();
     const { activeWorkspace, workspaceConfig, switchWorkspace, loading: wsLoading } = useWorkspace();
     const router = useRouter();
 
-    const isSuperAdmin = user?.email === 'akshathhp123@gmail.com';
-
-    useEffect(() => {
+        useEffect(() => {
         if (!loading && !user) {
             router.push('/akshath/login');
         }
@@ -60,7 +58,7 @@ export default function AdminGuard({ children }) {
                     <Link href="/akshath/inventory" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                         <Package size={20} /> Inventory
                     </Link>
-                    {user?.email === 'akshathhp123@gmail.com' && (
+                    {isSuperAdmin && (
                         <>
                             <Link href="/akshath/dashboard/analytics" className="flex items-center gap-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                                 <TrendingUp size={20} /> Analytics
