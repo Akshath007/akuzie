@@ -64,7 +64,7 @@ export function WorkspaceProvider({ children }) {
                 }
 
                 // Validate with server
-                const res = await fetch(`/api/workspace/verify?token=${token}`);
+                const res = await fetch(`/api/workspaces/verify?token=${token}`);
                 const data = await res.json();
 
                 if (mounted && data.valid) {
@@ -91,7 +91,7 @@ export function WorkspaceProvider({ children }) {
         setError(null);
 
         try {
-            const res = await fetch('/api/workspace/verify', {
+            const res = await fetch('/api/workspaces/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ workspace, pin }),

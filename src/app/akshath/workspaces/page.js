@@ -112,7 +112,7 @@ function WorkspaceAdminCard({ workspace, onEdit, onRefresh }) {
 
         try {
             const idToken = await auth.currentUser.getIdToken();
-            const res = await fetch('/api/workspace/verify', {
+            const res = await fetch('/api/workspaces/verify', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

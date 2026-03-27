@@ -16,9 +16,9 @@ Requirements for the immediate stability patch milestone.
 
 ### Admin Robustness
 
-- [ ] **ADM-01**: Restore or recreate `WorkspaceFormModal.js` to fix the crashing admin page.
-- [ ] **ADM-02**: Fix API route mismatch: ensure either the folder is named `/workspaces` or fetch calls use `/workspace`.
-- [ ] **ADM-03**: Verify admin workspace management page loads and functions correctly without crashing.
+- [x] **ADM-01**: Restore or recreate `WorkspaceFormModal.js` to fix the crashing admin page.
+- [x] **ADM-02**: Fix API route mismatch: ensure either the folder is named `/workspaces` or fetch calls use `/workspace`.
+- [x] **ADM-03**: Verify admin workspace management page loads and functions correctly without crashing.
 
 ### Security & Roles
 
@@ -54,9 +54,9 @@ Deferred to future releases.
 | AUC-02 | Phase 1 | Complete |
 | AUC-03 | Phase 1 | Complete |
 | AUC-04 | Phase 1 | Complete |
-| ADM-01 | Phase 2 | Pending |
-| ADM-02 | Phase 2 | Pending |
-| ADM-03 | Phase 2 | Pending |
+| ADM-01 | Phase 2 | Complete |
+| ADM-02 | Phase 2 | Complete |
+| ADM-03 | Phase 2 | Complete |
 | SEC-01 | Phase 3 | Pending |
 | SEC-02 | Phase 3 | Pending |
 | SEC-03 | Phase 3 | Pending |
