@@ -61,68 +61,32 @@ export async function createAuction(data) {
 // --- HELPER: Place Bid (Transactional) ---
 export async function placeBid(auctionId, userId, amount, userName = 'Masked User') {
     try {
-        await runTransaction(db, async (transaction) => {
-            const auctionDocRef = doc(db, "auctions", auctionId);
-            const auctionDoc = await transaction.get(auctionDocRef);
+        const { auth } = await import('@/lib/firebase');
+        if (!auth.currentUser) throw new Error("User must be logged in to bid.");
+        
+        const idToken = await auth.currentUser.getIdToken();
 
-            if (!auctionDoc.exists()) {
-                throw "Auction does not exist!";
-            }
-
-            const auctionData = auctionDoc.data();
-            const now = Timestamp.now();
-            const endTime = auctionData.endTime;
-
-            // 1. Validation
-            if (auctionData.status !== 'active') {
-                throw "Auction is not active.";
-            }
-
-            if (now.toMillis() > endTime.toMillis()) {
-                throw "Auction has ended.";
-            }
-
-            const currentBid = auctionData.currentHighestBid || 0;
-            const minIncrement = auctionData.minBidIncrement || 0;
-            const minNextBid = auctionData.bidCount > 0
-                ? currentBid + minIncrement
-                : auctionData.startingPrice;
-
-            if (amount < minNextBid) {
-                throw `Bid must be at least ${minNextBid}`;
-            }
-
-            // 2. Anti-Sniping Logic (Extend by 2 mins if bid within last 2 mins)
-            let newEndTime = endTime;
-            const timeRemaining = endTime.toMillis() - now.toMillis();
-            if (timeRemaining < 2 * 60 * 1000) { // Less than 2 mins
-                newEndTime = new Timestamp(endTime.seconds + 120, endTime.nanoseconds);
-            }
-
-            // 3. Create Bid Record
-            const newBidRef = doc(collection(db, "bids"));
-            transaction.set(newBidRef, {
+        const response = await fetch('/api/auction/bid', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
                 auctionId,
-                userId,
-                userName, // Store name for real-time display
                 amount,
-                timestamp: now
-            });
-
-            // 4. Update Auction State
-            transaction.update(auctionDocRef, {
-                currentHighestBid: amount,
-                highestBidderId: userId,
-                highestBidderName: userName,
-                endTime: newEndTime,
-                bidCount: (auctionData.bidCount || 0) + 1,
-                lastBidTime: now
-            });
+                userName
+            })
         });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to place bid');
+        }
 
         return { success: true };
     } catch (e) {
-        console.error("Transaction failed: ", e);
+        console.error("Bid submission failed: ", e);
         throw e;
     }
 }

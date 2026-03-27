@@ -9,10 +9,10 @@ Requirements for the immediate stability patch milestone.
 
 ### Secure Bidding (Auctions)
 
-- [ ] **AUC-01**: Create secure API route (`/api/auction/bid`) to handle bid placements via `firebase-admin`.
-- [ ] **AUC-02**: Update `placeBid` in `auction-data.js` to call the new API route instead of direct Firestore mutation.
-- [ ] **AUC-03**: Update `firestore.rules` to strictly prevent client-side writes to the `auctions` collection.
-- [ ] **AUC-04**: Update `firestore.rules` to allow public read access to the `bids` collection so users can see bid history.
+- [x] **AUC-01**: Create secure API route (`/api/auction/bid`) to handle bid placements via `firebase-admin`.
+- [x] **AUC-02**: Update `placeBid` in `auction-data.js` to call the new API route instead of direct Firestore mutation.
+- [x] **AUC-03**: Update `firestore.rules` to strictly prevent client-side writes to the `auctions` collection.
+- [x] **AUC-04**: Update `firestore.rules` to allow public read access to the `bids` collection so users can see bid history.
 
 ### Admin Robustness
 
@@ -50,10 +50,10 @@ Deferred to future releases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUC-01 | Phase 1 | Pending |
-| AUC-02 | Phase 1 | Pending |
-| AUC-03 | Phase 1 | Pending |
-| AUC-04 | Phase 1 | Pending |
+| AUC-01 | Phase 1 | Complete |
+| AUC-02 | Phase 1 | Complete |
+| AUC-03 | Phase 1 | Complete |
+| AUC-04 | Phase 1 | Complete |
 | ADM-01 | Phase 2 | Pending |
 | ADM-02 | Phase 2 | Pending |
 | ADM-03 | Phase 2 | Pending |
