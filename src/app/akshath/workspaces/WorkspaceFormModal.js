@@ -16,7 +16,8 @@ export default function WorkspaceFormModal({ isOpen, onClose, workspaceToEdit, o
         icon: '📂',
         bgGradient: 'from-gray-500 to-gray-700',
         color: 'gray',
-        allowedEmails: [] // Array of strings
+        allowedEmails: [],
+        pin: ''
     });
     
     const [emailInput, setEmailInput] = useState('');
@@ -34,7 +35,8 @@ export default function WorkspaceFormModal({ isOpen, onClose, workspaceToEdit, o
                     icon: workspaceToEdit.icon || '📂',
                     bgGradient: workspaceToEdit.bgGradient || 'from-gray-500 to-gray-700',
                     color: workspaceToEdit.color || 'gray',
-                    allowedEmails: workspaceToEdit.allowedEmails || []
+                    allowedEmails: workspaceToEdit.allowedEmails || [],
+                    pin: '' // Don't pre-fill PIN on edit
                 });
             } else {
                 setFormData({
@@ -45,7 +47,8 @@ export default function WorkspaceFormModal({ isOpen, onClose, workspaceToEdit, o
                     icon: '📂',
                     bgGradient: 'from-gray-500 to-gray-700',
                     color: 'gray',
-                    allowedEmails: []
+                    allowedEmails: [],
+                    pin: ''
                 });
             }
             setError('');
@@ -211,6 +214,25 @@ export default function WorkspaceFormModal({ isOpen, onClose, workspaceToEdit, o
                                         className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"
                                     />
                                 </div>
+                                
+                                {!isEditMode && (
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                            Initial PIN <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="pin"
+                                            value={formData.pin}
+                                            onChange={handleChange}
+                                            placeholder="e.g. 1234"
+                                            required={!isEditMode}
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                                            minLength={4}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Users will need this PIN to enter the workspace.</p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Right Column */}

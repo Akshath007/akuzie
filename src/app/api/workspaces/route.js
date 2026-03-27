@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
+import crypto from 'crypto';
+
+function hashPin(pin) {
+    return crypto.createHash('sha256').update(pin).digest('hex');
+}
+
 /**
  * GET /api/workspaces
  * Header: Authorization: Bearer <firebase-id-token>
@@ -18,7 +24,8 @@ export async function GET(request) {
         const idToken = authHeader.split('Bearer ')[1];
         const decoded = await adminAuth.verifyIdToken(idToken);
         const email = decoded.email;
-        const isSuperAdmin = email === 'akshathhp123@gmail.com' || email === 'akuzie27@gmail.com';
+        // Strictly only the primary admin is super admin for discovering ALL workspaces
+        const isSuperAdmin = email === 'akshathhp123@gmail.com';
 
         const workspacesRef = adminDb.collection('workspaces');
         const snapshot = await workspacesRef.orderBy('createdAt', 'desc').get();
@@ -29,7 +36,7 @@ export async function GET(request) {
             createdAt: doc.data().createdAt?.toMillis?.() || null,
         }));
 
-        // Filter for non-super admins
+        // Filter for non-super admins (like akuzie27@gmail.com logging in as admin)
         if (!isSuperAdmin) {
             workspaces = workspaces.filter(ws =>
                 ws.allowedEmails && ws.allowedEmails.includes(email)
@@ -45,7 +52,7 @@ export async function GET(request) {
 
 /**
  * POST /api/workspaces
- * Body: { id, label, description, category, icon, bgGradient, color, allowedEmails }
+ * Body: { id, label, description, category, icon, bgGradient, color, allowedEmails, pin }
  * Header: Authorization: Bearer <super-admin-token>
  * 
  * Creates a new dynamic workspace.
@@ -60,16 +67,20 @@ export async function POST(request) {
         const idToken = authHeader.split('Bearer ')[1];
         const decoded = await adminAuth.verifyIdToken(idToken);
 
-        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com' || decoded.email === 'akuzie27@gmail.com';
+        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com';
         if (!isSuperAdmin) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const data = await request.json();
-        const { id, label, description, category, icon, bgGradient, color, allowedEmails } = data;
+        const { id, label, description, category, icon, bgGradient, color, allowedEmails, pin } = data;
 
-        if (!id || !label || !category) {
+        if (!id || !label || !category || !pin) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        if (pin.length < 4) {
+             return NextResponse.json({ error: 'PIN must be at least 4 characters' }, { status: 400 });
         }
 
         const workspacesRef = adminDb.collection('workspaces');
@@ -89,6 +100,7 @@ export async function POST(request) {
             bgGradient: bgGradient || 'from-gray-500 to-gray-700',
             color: color || 'gray',
             allowedEmails: allowedEmails || [],
+            pinHash: hashPin(pin),
             createdAt: new Date(),
             createdBy: decoded.email
         });
@@ -102,6 +114,7 @@ export async function POST(request) {
         });
 
         return NextResponse.json({ success: true, docId: newDoc.id });
+
     } catch (error) {
         console.error('Create workspace error:', error);
         return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 });
@@ -123,7 +136,7 @@ export async function DELETE(request) {
         const idToken = authHeader.split('Bearer ')[1];
         const decoded = await adminAuth.verifyIdToken(idToken);
 
-        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com' || decoded.email === 'akuzie27@gmail.com';
+        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com';
         if (!isSuperAdmin) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -187,7 +200,7 @@ export async function PATCH(request) {
         const idToken = authHeader.split('Bearer ')[1];
         const decoded = await adminAuth.verifyIdToken(idToken);
 
-        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com' || decoded.email === 'akuzie27@gmail.com';
+        const isSuperAdmin = decoded.email === 'akshathhp123@gmail.com';
         if (!isSuperAdmin) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
