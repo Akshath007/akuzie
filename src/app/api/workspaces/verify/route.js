@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
+export const dynamic = 'force-dynamic';
 import crypto from 'crypto';
 
 // ─── Firestore-backed Rate Limiter ───────────────────────────────────────────
