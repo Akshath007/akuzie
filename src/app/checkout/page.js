@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
-import { processOrder, getPainting } from '@/lib/data';
+import { processOrder, getPainting, getPaymentSettings } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, ShieldCheck, CreditCard } from 'lucide-react';
+import { Loader2, ShieldCheck, CreditCard, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -16,6 +16,7 @@ export default function CheckoutPage() {
     const { user } = useAuth();
     const [step, setStep] = useState(1); // 1: Details, 2: Payment
     const [loading, setLoading] = useState(false);
+    const [paymentConfig, setPaymentConfig] = useState({ title: 'Pay Securely via PayU', paymentUrl: '' });
     const [formData, setFormData] = useState({
         name: user?.displayName || '',
         email: user?.email || '',
@@ -24,6 +25,19 @@ export default function CheckoutPage() {
         city: '',
         postalCode: '',
     });
+
+    useEffect(() => {
+        async function loadPaymentConfig() {
+            const config = await getPaymentSettings();
+            if (config) {
+                setPaymentConfig({
+                    title: config.title || 'Pay Securely via PayU',
+                    paymentUrl: config.paymentUrl || '',
+                });
+            }
+        }
+        loadPaymentConfig();
+    }, []);
 
     useEffect(() => {
         if (user) {
@@ -91,6 +105,13 @@ export default function CheckoutPage() {
 
             // 2. Create local order in Firestore
             const orderId = await processOrder(orderData, paintingIds);
+
+            // If a custom direct payment gateway URL was set in admin dashboard
+            if (paymentConfig.paymentUrl && paymentConfig.paymentUrl.trim() !== '') {
+                localStorage.setItem('akuzie_pending_order', orderId);
+                window.location.href = paymentConfig.paymentUrl;
+                return;
+            }
 
             // 3. Get PayU form params from server
             const productInfo = cart.map(item => item.title).join(', ').substring(0, 100);
@@ -282,7 +303,7 @@ export default function CheckoutPage() {
                         </div>
                     </div>
 
-                    {/* PayU Payment Button */}
+                    {/* Payment Button */}
                     <button
                         onClick={handlePayUPayment}
                         disabled={loading}
@@ -293,7 +314,7 @@ export default function CheckoutPage() {
                         ) : (
                             <>
                                 <CreditCard size={20} />
-                                Pay Securely via PayU
+                                {paymentConfig.title || 'Pay Securely Online'}
                             </>
                         )}
                     </button>

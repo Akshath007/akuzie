@@ -361,3 +361,33 @@ export async function deleteUser(uid, adminUser) {
     }
 }
 
+// Payment Settings
+export async function getPaymentSettings() {
+    try {
+        const docRef = doc(db, "settings", "payment");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data();
+        }
+    } catch (err) {
+        console.error("Error fetching payment settings:", err);
+    }
+    return {
+        title: "Pay Online / Direct Link",
+        paymentUrl: "",
+        enabled: true,
+    };
+}
+
+export async function updatePaymentSettings(settingsData, adminUser) {
+    const docRef = doc(db, "settings", "payment");
+    await setDoc(docRef, {
+        ...settingsData,
+        updatedAt: serverTimestamp(),
+    }, { merge: true });
+    if (adminUser) {
+        await logAdminAction(adminUser, "UPDATE_PAYMENT_SETTINGS", "payment", settingsData);
+    }
+}
+
+

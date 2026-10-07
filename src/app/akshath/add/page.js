@@ -20,8 +20,8 @@ export default function AddPaintingPage() {
 
         // Auto-set category based on active workspace (unless super admin)
     const initialCategory = isSuperAdmin ? 'painting' : (workspaceConfig?.category || 'painting');
-    const defaultMedium = initialCategory === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas';
-    const defaultFinish = initialCategory === 'crochet' ? 'Soft' : 'Varnished';
+    const defaultMedium = 'Acrylic on Canvas';
+    const defaultFinish = 'Varnished';
 
     const [formData, setFormData] = useState({
         title: '',
@@ -130,13 +130,10 @@ export default function AddPaintingPage() {
                                         setFormData({
                                             ...formData,
                                             category: cat,
-                                            medium: cat === 'crochet' ? 'Wool / Cotton Yarn' : 'Acrylic on Canvas',
-                                            finish: cat === 'crochet' ? 'Soft' : 'Varnished'
                                         });
                                     }}
                                 >
                                     <option value="painting">Painting</option>
-                                    <option value="crochet">Crochet</option>
                                 </select>
                                 {!isSuperAdmin && <p className="text-[10px] text-violet-500 mt-2 ml-1">Category is locked to your current workspace.</p>}
                             </div>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export const metadata = {
     title: 'About Us | Akuzie',
-    description: 'Akuzie — original handmade paintings, crochet products, and unique art pieces from Bengaluru, Karnataka.',
+    description: 'Akuzie — original handmade paintings and unique art pieces from Bengaluru, Karnataka.',
 };
 
 export default function AboutPage() {

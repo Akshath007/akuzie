@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPaintings, getOrders } from '@/lib/data';
+import { getPaintings, getOrders, getPaymentSettings, updatePaymentSettings } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { formatPrice, PAINTING_STATUS, cn } from '@/lib/utils';
-import { TrendingUp, ImageIcon, Package, ShoppingBag, AlertCircle, Settings, ArrowRight } from 'lucide-react';
+import { TrendingUp, ImageIcon, Package, ShoppingBag, AlertCircle, Settings, ArrowRight, CreditCard, Link as LinkIcon, CheckCircle2, Save, Loader2 } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import Link from 'next/link';
 
@@ -20,6 +20,12 @@ export default function DashboardPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Payment settings state
+    const [paymentTitle, setPaymentTitle] = useState('Pay Securely Online');
+    const [paymentUrl, setPaymentUrl] = useState('');
+    const [savingPayment, setSavingPayment] = useState(false);
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -43,12 +49,18 @@ export default function DashboardPage() {
                     fetchCat = workspaceConfig?.category;
                 }
 
-                const [paintingsData, ordersData] = await Promise.all([
+                const [paintingsData, ordersData, paymentSettingsData] = await Promise.all([
                     getPaintings(fetchCat),
                     getOrders(),
+                    getPaymentSettings(),
                 ]);
 
                 setPaintings(paintingsData || []);
+
+                if (paymentSettingsData) {
+                    setPaymentTitle(paymentSettingsData.title || 'Pay Securely Online');
+                    setPaymentUrl(paymentSettingsData.paymentUrl || '');
+                }
 
                 let filteredOrders = ordersData || [];
                 if (!isSuperAdmin && activeWorkspace) {
@@ -80,6 +92,25 @@ export default function DashboardPage() {
 
         fetchData();
     }, [activeWorkspace, workspaceConfig, user, isSuperAdmin, selectedTab, workspaces, wsLoading]);
+
+    const handleSavePaymentSettings = async (e) => {
+        e.preventDefault();
+        setSavingPayment(true);
+        setPaymentSuccess(false);
+        try {
+            await updatePaymentSettings({
+                title: paymentTitle,
+                paymentUrl: paymentUrl,
+            }, user);
+            setPaymentSuccess(true);
+            setTimeout(() => setPaymentSuccess(false), 3000);
+        } catch (err) {
+            console.error("Failed to save payment settings:", err);
+            alert("Failed to save payment settings: " + err.message);
+        } finally {
+            setSavingPayment(false);
+        }
+    };
 
 
     const totalValue = paintings
@@ -270,6 +301,72 @@ export default function DashboardPage() {
                     icon={ShoppingBag}
                     variant="violet"
                 />
+            </div>
+
+            {/* Payment Settings Section */}
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                    <div>
+                        <h3 className="text-xl font-serif text-gray-900 flex items-center gap-3">
+                            <CreditCard className="text-violet-600" size={24} />
+                            Payment Settings
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1">
+                            Set the payment title and direct payment gateway/link URL for customer checkouts.
+                        </p>
+                    </div>
+                    {paymentSuccess && (
+                        <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl text-xs font-semibold animate-in fade-in">
+                            <CheckCircle2 size={16} /> Saved successfully!
+                        </div>
+                    )}
+                </div>
+
+                <form onSubmit={handleSavePaymentSettings} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 ml-1">
+                                Payment Title
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Pay via PhonePe / GPay / Cards"
+                                    value={paymentTitle}
+                                    onChange={(e) => setPaymentTitle(e.target.value)}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-gray-900 focus:outline-none focus:border-violet-500 focus:bg-white transition-all font-medium"
+                                />
+                            </div>
+                            <p className="text-[11px] text-gray-400 ml-1">Title displayed to customers during checkout.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 ml-1 flex items-center gap-1.5">
+                                <LinkIcon size={12} /> Direct Payment Gateway / Link URL
+                            </label>
+                            <input
+                                type="url"
+                                placeholder="https://payu.in/... or https://upi.link/..."
+                                value={paymentUrl}
+                                onChange={(e) => setPaymentUrl(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-gray-900 focus:outline-none focus:border-violet-500 focus:bg-white transition-all font-mono"
+                            />
+                            <p className="text-[11px] text-gray-400 ml-1">Custom payment URL or hosted checkout page link.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                        <button
+                            type="submit"
+                            disabled={savingPayment}
+                            className="bg-gray-900 hover:bg-violet-600 text-white px-8 py-3.5 rounded-2xl text-xs uppercase tracking-widest font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+                        >
+                            {savingPayment ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                            {savingPayment ? 'Saving...' : 'Save Payment Settings'}
+                        </button>
+                    </div>
+                </form>
             </div>
 
             {/* Quick Summary */}

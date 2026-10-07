@@ -58,32 +58,15 @@ export default function Home() {
     let cancelled = false;
 
     async function fetchData() {
-      // Fetch only 6 items per category via cached API (server-side LRU cache)
-      // Extra buffer of 6 to account for sold items being filtered out
-      const [paintingsData, crochetData] = await Promise.all([
-        getPaintingsCached('painting', 6),
-        getPaintingsCached('crochet', 6)
-      ]);
+      // Fetch paintings via cached API
+      const paintingsData = await getPaintingsCached('painting', 6);
 
       if (cancelled) return;
 
       // Filter out sold items
       const availablePaintings = paintingsData.filter(p => p.status !== 'sold');
-      const availableCrochet = crochetData.filter(p => p.status !== 'sold');
 
-      const topPaintings = availablePaintings.slice(0, 3);
-      const topCrochet = availableCrochet.slice(0, 3);
-
-      // Interleave: [P, C, P, C, P, C]
-      const mixed = [];
-      const maxLength = Math.max(topPaintings.length, topCrochet.length);
-
-      for (let i = 0; i < maxLength; i++) {
-        if (topPaintings[i]) mixed.push(topPaintings[i]);
-        if (topCrochet[i]) mixed.push(topCrochet[i]);
-      }
-
-      setPaintings(mixed);
+      setPaintings(availablePaintings.slice(0, 6));
       setLoading(false);
     }
 

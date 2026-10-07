@@ -24,7 +24,7 @@ export default function Footer() {
                             akuzie
                         </Link>
                         <p className="text-sm text-gray-400 font-light leading-relaxed">
-                            Original handmade paintings &amp; crochet creations.
+                            Original handmade paintings &amp; unique art creations.
                         </p>
                         {/* Social Symbols */}
                         <div className="flex items-center gap-6 pt-2">

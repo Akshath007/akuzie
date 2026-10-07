@@ -47,7 +47,7 @@ function GalleryContent() {
                 {/* Header */}
                 <div className="mb-20 text-center max-w-2xl mx-auto fade-in">
                     <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-6">
-                        {category === 'crochet' ? 'Cozy Crochet' : 'Art Collection'}
+                        Art Collection
                     </h1>
                     {query && (
                         <p className="text-gray-500 font-light mb-4">Search results for "{query}"</p>
